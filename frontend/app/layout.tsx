@@ -16,8 +16,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body className={`${inter.className} min-h-screen flex`}>
+    <html lang="en" className="light">
+      <body className={`${inter.className} min-h-screen flex bg-default-50`}>
         <Sidebar />
         <main className="flex-1 overflow-auto">
           {children}

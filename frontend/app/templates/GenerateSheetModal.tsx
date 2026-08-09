@@ -1,17 +1,30 @@
 "use client";
-import { useState } from "react";
+import { useState, useRef } from "react";
+import { 
+  Modal, 
+  Button, 
+  Input 
+} from "@heroui/react";
+import { FileDown, Image as ImageIcon, AlertCircle } from "lucide-react";
 import { generateOMRSheet } from "@/lib/api";
 
-export default function GenerateSheetModal({ onClose }: { onClose: () => void }) {
+export default function GenerateSheetModal({ 
+  isOpen, 
+  onClose 
+}: { 
+  isOpen: boolean; 
+  onClose: () => void; 
+}) {
   const [instituteName, setInstituteName] = useState("");
   const [examName, setExamName] = useState("");
   const [logo, setLogo] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [format, setFormat] = useState<"pdf" | "png">("pdf");
   const [error, setError] = useState("");
+  
+  const fileRef = useRef<HTMLInputElement>(null);
 
-  const handleGenerate = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleGenerate = async () => {
     setLoading(true);
     setError("");
     
@@ -40,85 +53,83 @@ export default function GenerateSheetModal({ onClose }: { onClose: () => void })
   };
 
   return (
-    <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl">
-        <div className="p-6">
-          <h2 className="text-xl font-bold text-slate-900 mb-1">Generate OMR Sheet</h2>
-          <p className="text-sm text-slate-500 mb-6">
+    <Modal isOpen={isOpen} onOpenChange={(open) => !open && onClose()} >
+      <Modal.Dialog>
+        <Modal.Header className="flex flex-col gap-1">
+          <h2 className="text-xl font-bold text-foreground">Generate OMR Sheet</h2>
+          <p className="text-sm text-default-500 font-normal">
             Generate a printable 200-question OMR sheet. Optional fields will appear in the header.
           </p>
-
-          <form onSubmit={handleGenerate} className="space-y-4">
-            <div>
-              <label className="label">Format</label>
+        </Modal.Header>
+        <Modal.Body>
+          <div className="space-y-4">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-sm font-medium text-foreground">Format</label>
               <select
-                className="input"
                 value={format}
                 onChange={(e) => setFormat(e.target.value as "pdf" | "png")}
+                className="w-full bg-default-100 border-2 border-transparent hover:bg-default-200 focus:bg-default-100 focus:border-primary rounded-xl px-3 py-2 text-sm outline-none transition-colors"
               >
                 <option value="pdf">PDF</option>
                 <option value="png">PNG Image</option>
               </select>
             </div>
             
-            <div>
-              <label className="label">Institute Name (Optional)</label>
-              <input
-                type="text"
-                className="input"
-                placeholder="e.g. OMRly Institute"
-                value={instituteName}
-                onChange={(e) => setInstituteName(e.target.value)}
-              />
-            </div>
+            <div className="flex flex-col gap-1.5"><label className="text-sm font-medium">Institute Name (Optional)</label><input className="w-full bg-default-100 rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary" placeholder="e.g. OMRly Institute" 
+              value={instituteName}
+              onChange={(e) => setInstituteName(e.target.value)}
+             /></div>
             
-            <div>
-              <label className="label">Exam Name (Optional)</label>
-              <input
-                type="text"
-                className="input"
-                placeholder="e.g. Final Examination 2026"
-                value={examName}
-                onChange={(e) => setExamName(e.target.value)}
-              />
-            </div>
+            <div className="flex flex-col gap-1.5"><label className="text-sm font-medium">Exam Name (Optional)</label><input className="w-full bg-default-100 rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary" placeholder="e.g. Final Examination 2026" 
+              value={examName}
+              onChange={(e) => setExamName(e.target.value)}
+             /></div>
 
             <div>
-              <label className="label">Logo (Optional)</label>
-              <input
-                type="file"
-                accept="image/*"
-                className="input cursor-pointer"
-                onChange={(e) => setLogo(e.target.files?.[0] || null)}
-              />
+              <p className="text-sm text-foreground mb-2">Logo (Optional)</p>
+              <div 
+                className="border-2 border-dashed border-default-300 rounded-xl p-6 flex flex-col items-center justify-center cursor-pointer hover:bg-default-50 transition-colors"
+                onClick={() => fileRef.current?.click()}
+              >
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => setLogo(e.target.files?.[0] || null)}
+                />
+                {logo ? (
+                  <div className="text-center">
+                    <p className="text-sm font-medium text-primary truncate max-w-[200px]">{logo.name}</p>
+                    <p className="text-xs text-default-400 mt-1">Click to change</p>
+                  </div>
+                ) : (
+                  <div className="text-center flex flex-col items-center">
+                    <ImageIcon size={24} className="text-default-400 mb-2" />
+                    <p className="text-sm text-default-600">Click to upload logo</p>
+                  </div>
+                )}
+              </div>
             </div>
 
             {error && (
-              <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl">
-                <p className="text-red-400 text-sm">{error}</p>
+              <div className="p-3 bg-danger-50 border border-danger-200 rounded-xl flex items-start gap-2">
+                <AlertCircle size={16} className="text-danger mt-0.5" />
+                <p className="text-danger text-sm">{error}</p>
               </div>
             )}
-
-            <div className="flex gap-3 pt-4">
-              <button
-                type="button"
-                onClick={onClose}
-                className="btn btn-secondary flex-1"
-                disabled={loading}
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="btn btn-primary flex-1"
-                disabled={loading}
-              >
-                {loading ? "Generating..." : "Generate PDF"}
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
+          </div>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="outline" onPress={onClose} isDisabled={loading}>
+            Cancel
+          </Button>
+          <Button variant="primary" onPress={handleGenerate} isPending={loading}>
+            {!loading && <FileDown size={16} />}
+            {loading ? "Generating..." : "Generate PDF"}
+          </Button>
+        </Modal.Footer>
+      </Modal.Dialog>
+    </Modal>
   );
 }

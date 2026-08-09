@@ -2,10 +2,10 @@
 import { useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import { Card, Button } from "@heroui/react";
+import { ImagePlus, Lightbulb, ChevronRight, Check, X, Circle, Loader } from "lucide-react";
 import { evaluateOMR } from "@/lib/api";
 import type { ProcessingStep } from "@/types";
-
-const ACCEPTED_TYPES = [".jpg", ".jpeg", ".png", ".pdf"];
 
 const STEP_LABELS = [
   "Image loaded",
@@ -59,7 +59,6 @@ export default function EvaluatePage() {
     try {
       const result = await evaluateOMR(testId, file);
       clearInterval(interval);
-      // Update steps from API response
       if (result.steps) {
         setSteps(result.steps);
       } else {
@@ -67,7 +66,6 @@ export default function EvaluatePage() {
       }
       setWarnings(result.warnings || []);
 
-      // Navigate to review/result page
       setTimeout(() => {
         router.push(`/evaluations/${result.evaluation_id}/review?fromEval=1`);
       }, 600);
@@ -83,134 +81,151 @@ export default function EvaluatePage() {
   return (
     <div className="p-8 max-w-2xl">
       <div className="mb-6">
-        <div className="flex items-center gap-2 text-xs text-slate-900/30 mb-2">
-          <Link href="/tests" className="hover:text-slate-600">Tests</Link>
-          <span>›</span>
-          <Link href={`/tests/${testId}`} className="hover:text-slate-600">Test #{testId}</Link>
-          <span>›</span>
-          <span className="text-slate-500">Evaluate OMR</span>
+        <div className="flex items-center gap-2 text-xs text-default-400 mb-2">
+          <Link href="/tests" className="hover:text-foreground">Tests</Link>
+          <ChevronRight size={12} />
+          <Link href={`/tests/${testId}`} className="hover:text-foreground">Test #{testId}</Link>
+          <ChevronRight size={12} />
+          <span className="text-default-600">Evaluate OMR</span>
         </div>
-        <h1 className="page-title">Evaluate OMR Sheet</h1>
-        <p className="page-subtitle">Upload a scanned or photographed OMR answer sheet</p>
+        <h1 className="text-2xl font-bold text-foreground">Evaluate OMR Sheet</h1>
+        <p className="text-default-500 text-sm mt-1">Upload a scanned or photographed OMR answer sheet</p>
       </div>
 
       {/* Upload Area */}
-      <div className="card mb-5">
-        <h2 className="font-semibold text-slate-900 mb-4">Upload OMR Sheet</h2>
+      <Card variant="secondary" className="mb-5">
+        <Card.Content className="p-6">
+          <h2 className="font-semibold text-foreground mb-4">Upload OMR Sheet</h2>
 
-        <div
-          className={`dropzone ${dragOver ? "drag-over" : ""} ${file ? "border-blue-500/30 bg-blue-500/4" : ""}`}
-          onClick={() => !processing && fileRef.current?.click()}
-          onDragOver={e => { e.preventDefault(); setDragOver(true); }}
-          onDragLeave={() => setDragOver(false)}
-          onDrop={e => {
-            e.preventDefault(); setDragOver(false);
-            const f = e.dataTransfer.files[0];
-            if (f && !processing) handleFile(f);
-          }}
-        >
-          <input
-            ref={fileRef} type="file" className="hidden"
-            accept="image/*,.pdf"
-            onChange={e => { const f = e.target.files?.[0]; if (f) handleFile(f); }}
-          />
+          <div
+            className={`border-2 border-dashed rounded-2xl bg-white p-10 text-center cursor-pointer transition-all ${
+              dragOver ? "border-primary-400 bg-primary-50" : ""
+            } ${file && !processing ? "border-primary-300 bg-primary-50/50" : !dragOver ? "border-default-300 bg-default-50 hover:border-primary-300 hover:bg-primary-50" : ""}`}
+            onClick={() => !processing && fileRef.current?.click()}
+            onDragOver={e => { e.preventDefault(); setDragOver(true); }}
+            onDragLeave={() => setDragOver(false)}
+            onDrop={e => {
+              e.preventDefault(); setDragOver(false);
+              const f = e.dataTransfer.files[0];
+              if (f && !processing) handleFile(f);
+            }}
+          >
+            <input
+              ref={fileRef} type="file" className="hidden"
+              accept="image/*,.pdf"
+              onChange={e => { const f = e.target.files?.[0]; if (f) handleFile(f); }}
+            />
 
-          {preview && !processing ? (
-            <div className="flex flex-col items-center gap-3">
-              <img src={preview} alt="OMR preview" className="max-h-48 rounded-lg border border-slate-200 object-contain" />
-              <p className="text-slate-600 text-sm font-medium">{file?.name}</p>
-              <p className="text-slate-900/30 text-xs">{file ? (file.size / 1024).toFixed(0) : 0} KB — Click to change</p>
-            </div>
-          ) : processing ? (
-            <div className="flex flex-col items-center gap-3 py-4">
-              <div className="w-12 h-12 border-2 border-blue-500/30 border-t-blue-400 rounded-full spinner" />
-              <p className="text-blue-300 font-medium">Processing OMR sheet...</p>
-              <p className="text-slate-900/30 text-sm">This may take a few seconds</p>
-            </div>
-          ) : (
-            <>
-              <div className="text-5xl mb-3">🖼️</div>
-              <p className="text-slate-700 font-semibold text-lg">Drop OMR sheet here</p>
-              <p className="text-slate-500 mt-1">or click to browse</p>
-              <p className="text-slate-900/25 text-sm mt-3">Supports JPG, JPEG, PNG, PDF</p>
-            </>
-          )}
-        </div>
-      </div>
+            {preview && !processing ? (
+              <div className="flex flex-col items-center gap-3">
+                <img src={preview} alt="OMR preview" className="max-h-48 rounded-lg border border-default-200 object-contain" />
+                <p className="text-default-700 text-sm font-medium">{file?.name}</p>
+                <p className="text-default-400 text-xs">{file ? (file.size / 1024).toFixed(0) : 0} KB — Click to change</p>
+              </div>
+            ) : processing ? (
+              <div className="flex flex-col items-center gap-3 py-4">
+                <div className="w-12 h-12 border-2 border-primary-200 border-t-primary rounded-full spinner" />
+                <p className="text-primary font-medium">Processing OMR sheet...</p>
+                <p className="text-default-400 text-sm">This may take a few seconds</p>
+              </div>
+            ) : (
+              <>
+                <ImagePlus size={36} className="mx-auto mb-6 text-default-300" />
+                <p className="text-default-700 font-semibold text-lg">Drop OMR sheet here</p>
+                <p className="text-default-500 mt-1">or click to browse</p>
+                <p className="text-default-400 text-sm mt-3">Supports JPG, JPEG, PNG, PDF</p>
+              </>
+            )}
+          </div>
+        </Card.Content>
+      </Card>
 
       {/* Processing Steps */}
       {steps.length > 0 && (
-        <div className="card mb-5">
-          <h2 className="font-semibold text-slate-900 mb-4">Processing Progress</h2>
-          <div className="space-y-1">
-            {steps.map((step, i) => (
-              <div key={i} className="step-item">
-                <div className={`step-icon ${step.status}`}>
-                  {step.status === "done" ? "✓" : step.status === "error" ? "✗" : "○"}
-                </div>
-                <div className="flex-1">
-                  <p className={`text-sm ${step.status === "done" ? "text-slate-900" : step.status === "error" ? "text-red-400" : "text-slate-900/30"}`}>
-                    {step.name}
-                  </p>
-                  {step.message && (
-                    <p className="text-xs text-slate-900/30 mt-0.5">{step.message}</p>
+        <Card  className="mb-5 border border-default-200">
+          <Card.Content className="p-6">
+            <h2 className="font-semibold text-foreground mb-4">Processing Progress</h2>
+            <div className="space-y-1">
+              {steps.map((step, i) => (
+                <div key={i} className="flex items-center gap-3 py-2">
+                  <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 ${
+                    step.status === "done" ? "bg-success-100 text-success" : step.status === "error" ? "bg-danger-100 text-danger" : "bg-default-100 text-default-400"
+                  }`}>
+                    {step.status === "done" ? <Check size={14} /> : step.status === "error" ? <X size={14} /> : <Circle size={14} />}
+                  </div>
+                  <div className="flex-1">
+                    <p className={`text-sm ${step.status === "done" ? "text-foreground" : step.status === "error" ? "text-danger" : "text-default-400"}`}>
+                      {step.name}
+                    </p>
+                    {step.message && (
+                      <p className="text-xs text-default-400 mt-0.5">{step.message}</p>
+                    )}
+                  </div>
+                  {step.status === "pending" && processing && i === steps.findIndex(s => s.status === "pending") && (
+                    <Loader size={14} className="text-primary spinner" />
                   )}
                 </div>
-                {step.status === "pending" && processing && i === steps.findIndex(s => s.status === "pending") && (
-                  <div className="w-4 h-4 border border-blue-400/30 border-t-blue-400 rounded-full spinner" />
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
+              ))}
+            </div>
+          </Card.Content>
+        </Card>
       )}
 
       {/* Warnings */}
       {warnings.length > 0 && (
-        <div className="card mb-5 border-amber-500/20 bg-amber-500/4">
-          <p className="text-amber-400 font-medium text-sm mb-2">Warnings</p>
-          {warnings.map((w, i) => <p key={i} className="text-amber-400/70 text-xs">⚠ {w}</p>)}
-        </div>
+        <Card className="mb-5 border border-warning-200 bg-warning-50" >
+          <Card.Content className="p-4">
+            <p className="text-warning-600 font-medium text-sm mb-2">Warnings</p>
+            {warnings.map((w, i) => <p key={i} className="text-warning-500 text-xs flex items-center gap-1"><Lightbulb size={12} /> {w}</p>)}
+          </Card.Content>
+        </Card>
       )}
 
       {/* Error */}
       {error && (
-        <div className="card mb-5 border-red-500/20 bg-red-500/4">
-          <p className="text-red-400 font-medium text-sm mb-1">Processing Failed</p>
-          <p className="text-red-400/70 text-xs">{error}</p>
-          <div className="mt-3 p-3 rounded-lg bg-black/20 text-xs text-slate-900/30">
-            <p className="font-medium mb-1">Possible reasons:</p>
-            <ul className="space-y-0.5 list-disc list-inside">
-              <li>Image is too blurry or low contrast</li>
-              <li>OMR sheet is not fully visible</li>
-              <li>Poor lighting conditions</li>
-              <li>Image resolution too low (&lt;400×400)</li>
-              <li>Template does not match this OMR format</li>
-            </ul>
-          </div>
-        </div>
+        <Card className="mb-5 border border-danger-200 bg-danger-50" >
+          <Card.Content className="p-4">
+            <p className="text-danger font-medium text-sm mb-1">Processing Failed</p>
+            <p className="text-danger-500 text-xs">{error}</p>
+            <div className="mt-3 p-3 rounded-lg bg-default-100 text-xs text-default-500">
+              <p className="font-medium mb-1">Possible reasons:</p>
+              <ul className="space-y-0.5 list-disc list-inside">
+                <li>Image is too blurry or low contrast</li>
+                <li>OMR sheet is not fully visible</li>
+                <li>Poor lighting conditions</li>
+                <li>Image resolution too low (&lt;400x400)</li>
+                <li>Template does not match this OMR format</li>
+              </ul>
+            </div>
+          </Card.Content>
+        </Card>
       )}
 
       {/* Actions */}
       <div className="flex gap-3">
-        <button
-          onClick={handleProcess}
-          disabled={!file || processing}
-          className="btn btn-primary flex-1"
+        <Button
+          onPress={handleProcess}
+          isDisabled={!file || processing}
+          variant="primary"
+          className="flex-1"
+          isPending={processing}
         >
-          {processing ? (
-            <><span className="spinner w-4 h-4 border-2 border-white/30 border-t-white rounded-full" /> Processing...</>
-          ) : "Process OMR Sheet"}
-        </button>
-        <Link href={`/tests/${testId}`} className="btn btn-secondary">Cancel</Link>
+          {processing ? "Processing..." : "Process OMR Sheet"}
+        </Button>
+        <Link href={`/tests/${testId}`}>
+          <Button variant="outline">Cancel</Button>
+        </Link>
       </div>
 
-      <div className="mt-4 p-3 rounded-xl bg-white/2 border border-white/4">
-        <p className="text-xs text-slate-900/25">
-          💡 For best results: ensure the OMR sheet fills most of the frame, use good lighting, and avoid heavy shadows.
-          The system uses computer vision to detect filled bubbles — no AI or cloud processing.
-        </p>
-      </div>
+      <Card className="mt-4 border border-default-200 bg-default-50" >
+        <Card.Content className="p-3 flex flex-row items-start gap-2">
+          <Lightbulb size={14} className="text-default-400 mt-0.5 flex-shrink-0" />
+          <p className="text-xs text-default-500">
+            For best results: ensure the OMR sheet fills most of the frame, use good lighting, and avoid heavy shadows.
+            The system uses computer vision to detect filled bubbles — no AI or cloud processing.
+          </p>
+        </Card.Content>
+      </Card>
     </div>
   );
 }

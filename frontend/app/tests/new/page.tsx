@@ -1,6 +1,9 @@
 "use client";
+import Link from "next/link";
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { Card, Button, Input } from "@heroui/react";
+import { CheckCircle2, FileText, Upload, AlertTriangle } from "lucide-react";
 import { createTest, uploadAnswerKey } from "@/lib/api";
 
 export default function NewTestPage() {
@@ -12,7 +15,7 @@ export default function NewTestPage() {
   const [correctMarks, setCorrectMarks] = useState(1.0);
   const [wrongMarks, setWrongMarks] = useState(-1.25);
   const [eMarks, setEMarks] = useState(-1.0);
-  const [unansweredMarks, setUnansweredMarks] = useState(0.0);
+  const [unansweredMarks, setUnansweredMarks] = useState(-1.25);
   const [keyFile, setKeyFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -50,125 +53,155 @@ export default function NewTestPage() {
   }
 
   return (
-    <div className="p-8 max-w-2xl">
+    <div className="p-8">
       <div className="mb-8">
-        <h1 className="page-title">Create New Test</h1>
-        <p className="page-subtitle">Configure test settings and upload the answer key</p>
+        <h1 className="text-2xl font-bold text-foreground">Create New Test</h1>
+        <p className="text-default-500 text-sm mt-1">Configure test settings and upload the answer key</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Test Info */}
-        <div className="card space-y-5">
-          <h2 className="font-semibold text-slate-900 border-b border-white/5 pb-3">Test Information</h2>
+      <div className="grid grid-cols-3 gap-4">
+          {/* Test Info */}
+        <Card variant="secondary">
+          <Card.Content className="p-6 space-y-5">
+            <h2 className="font-semibold text-foreground border-b border-default-100 pb-3">Test Information</h2>
 
-          <div>
-            <label className="label">Test Name *</label>
-            <input className="input" required value={name} onChange={e => setName(e.target.value)}
-              placeholder="e.g. NEET Mock Test 01" />
-          </div>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-sm font-medium">Test Name</label>
+              <Input className="w-full bg-default-100 rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary"
+                required
+                placeholder="e.g. NEET Mock Test 01"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
 
-          <div>
-            <label className="label">Total Questions *</label>
-            <input className="input" type="number" min={1} max={200} required
-              value={totalQuestions} onChange={e => setTotalQuestions(Number(e.target.value))} />
-            <p className="text-xs text-slate-900/30 mt-1">Maximum: 200 questions</p>
-          </div>
-        </div>
+              />
+            </div>
+
+            <div>
+              <div className="flex flex-col gap-1.5"><label className="text-sm font-medium">Total Questions</label>
+              <Input type="number" min={1} max={200} value={String(totalQuestions)} onChange={(e) => setTotalQuestions(Number(e.target.value))} className="w-full bg-default-100 rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary" /><p className="text-xs text-default-500">Maximum: 200 questions</p></div>
+            </div>
+          </Card.Content>
+        </Card>
 
         {/* Scoring */}
-        <div className="card space-y-4">
-          <h2 className="font-semibold text-slate-900 border-b border-white/5 pb-3">Scoring Rules</h2>
-          <div className="grid grid-cols-2 gap-4">
-            {[
-              { label: "Correct Answer", value: correctMarks, setter: setCorrectMarks, hint: "Marks awarded for correct answer" },
-              { label: "Wrong Answer (A/B/C/D)", value: wrongMarks, setter: setWrongMarks, hint: "Marks deducted for wrong answer" },
-              { label: "E / Don't Know", value: eMarks, setter: setEMarks, hint: "Marks deducted when student selects E" },
-              { label: "Unanswered", value: unansweredMarks, setter: setUnansweredMarks, hint: "Marks for unanswered questions" },
-            ].map(field => (
-              <div key={field.label}>
-                <label className="label">{field.label}</label>
-                <input className="input" type="number" step="0.01"
-                  value={field.value}
-                  onChange={e => field.setter(Number(e.target.value))} />
-                <p className="text-xs text-slate-900/25 mt-1">{field.hint}</p>
-              </div>
-            ))}
-          </div>
-
-          {/* Preview */}
-          <div className="mt-2 p-3 rounded-xl bg-white/3 border border-white/5">
-            <p className="text-xs text-slate-500 font-medium mb-2">Score Preview (example: 100✓ 40✗ 20E 40—)</p>
-            <p className="text-sm text-slate-900">
-              {((100 * correctMarks) + (40 * wrongMarks) + (20 * eMarks) + (40 * unansweredMarks)).toFixed(2)} marks
-            </p>
-          </div>
-        </div>
-
-        {/* Answer Key */}
-        <div className="card">
-          <h2 className="font-semibold text-slate-900 border-b border-white/5 pb-3 mb-4">Answer Key *</h2>
-
-          <div
-            className={`dropzone ${keyFile ? "border-emerald-500/40 bg-emerald-500/4" : ""}`}
-            onClick={() => fileRef.current?.click()}
-            onDragOver={e => { e.preventDefault(); e.currentTarget.classList.add("drag-over"); }}
-            onDragLeave={e => e.currentTarget.classList.remove("drag-over")}
-            onDrop={e => {
-              e.preventDefault();
-              e.currentTarget.classList.remove("drag-over");
-              const f = e.dataTransfer.files[0];
-              if (f) setKeyFile(f);
-            }}
-          >
-            <input ref={fileRef} type="file" accept=".json,.csv" className="hidden"
-              onChange={e => { const f = e.target.files?.[0]; if (f) setKeyFile(f); }} />
-
-            {keyFile ? (
-              <>
-                <p className="text-3xl mb-2">✅</p>
-                <p className="text-emerald-400 font-medium">{keyFile.name}</p>
-                <p className="text-slate-900/30 text-sm mt-1">{(keyFile.size / 1024).toFixed(1)} KB — Click to change</p>
-              </>
-            ) : (
-              <>
-                <p className="text-4xl mb-3">📄</p>
-                <p className="text-slate-600 font-medium">Drop answer key here or click to browse</p>
-                <p className="text-slate-900/30 text-sm mt-1">Supported: JSON, CSV</p>
-                <div className="mt-3 text-xs text-slate-900/20 font-mono">
-                  CSV: question,answer&nbsp;&nbsp;|&nbsp;&nbsp;JSON: [{"{question:1, answer:'A'}"}]
+        <Card variant="secondary">
+          <Card.Content className="p-6 space-y-4">
+            <h2 className="font-semibold text-foreground border-b border-default-100 pb-3">Scoring Rules</h2>
+            <div className="grid grid-cols-2 gap-4">
+              {[
+                { label: "Correct Answer", value: correctMarks, setter: setCorrectMarks, hint: "Marks awarded for correct answer" },
+                { label: "Wrong Answer (A/B/C/D)", value: wrongMarks, setter: setWrongMarks, hint: "Marks deducted for wrong answer" },
+                { label: "E / Don't Know", value: eMarks, setter: setEMarks, hint: "Marks deducted when student selects E" },
+                { label: "Unanswered", value: unansweredMarks, setter: setUnansweredMarks, hint: "Marks for unanswered questions" },
+              ].map(field => (
+                <div key={field.label} className="flex flex-col gap-1.5">
+                  <label className="text-sm font-medium">{field.label}</label>
+                  <Input
+                    type="number"
+                    step={0.01}
+                    value={field.value}
+                    onChange={e => field.setter(Number(e.target.value))}
+                    className="w-full bg-default-100 rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary"
+                  />
+                  <p className="text-xs text-default-500">{field.hint}</p>
                 </div>
-              </>
+              ))}
+            </div>
+
+            {/* Preview */}
+            <div className="mt-2 p-3 rounded-2xl bg-white border border-default-100">
+              <p className="text-xs text-default-500 font-medium mb-2">Score Preview (example: 100 correct, 40 wrong, 20 E, 40 unanswered)</p>
+              <p className="text-sm text-foreground font-semibold">
+                {((100 * correctMarks) + (40 * wrongMarks) + (20 * eMarks) + (40 * unansweredMarks)).toFixed(2)} marks
+              </p>
+            </div>
+          </Card.Content>
+        </Card>
+      
+
+
+       
+          {/* Answer Key */}
+        <Card variant="secondary">
+          <Card.Content className="p-6">
+            <h2 className="font-semibold text-foreground border-b border-default-100 pb-3 mb-4">Answer Key *</h2>
+
+            <div
+              className={`border-2 border-dashed rounded-2xl bg-white p-10 text-center cursor-pointer transition-all ${keyFile
+                  ? "border-success-300 bg-success-50"
+                  : "border-default-300 bg-default-50 hover:border-primary-300 hover:bg-primary-50"
+                }`}
+              onClick={() => fileRef.current?.click()}
+              onDragOver={e => { e.preventDefault(); e.currentTarget.classList.add("border-primary-400", "bg-primary-50"); }}
+              onDragLeave={e => { e.currentTarget.classList.remove("border-primary-400", "bg-primary-50"); }}
+              onDrop={e => {
+                e.preventDefault();
+                e.currentTarget.classList.remove("border-primary-400", "bg-primary-50");
+                const f = e.dataTransfer.files[0];
+                if (f) setKeyFile(f);
+              }}
+            >
+              <input ref={fileRef} type="file" accept=".json,.csv" className="hidden"
+                onChange={e => { const f = e.target.files?.[0]; if (f) setKeyFile(f); }} />
+
+              {keyFile ? (
+                <>
+                  <CheckCircle2 size={40} className="mx-auto mb-2 text-success" />
+                  <p className="text-success-600 font-medium">{keyFile.name}</p>
+                  <p className="text-default-400 text-sm mt-1">{(keyFile.size / 1024).toFixed(1)} KB — Click to change</p>
+                </>
+              ) : (
+                <>
+                  <FileText size={40} className="mx-auto mb-3 text-default-300" />
+                  <p className="text-default-600 font-medium">Drop answer key here or click to browse</p>
+                  <p className="text-default-400 text-sm mt-1">Supported: JSON, CSV</p>
+                  <div className="mt-3 text-xs text-default-400 font-mono">
+                    CSV: question,answer&nbsp;&nbsp;|&nbsp;&nbsp;JSON: [&#123;&quot;question:1, answer:&apos;A&apos;&quot;&#125;]
+                  </div>
+                </>
+              )}
+            </div>
+
+            {keyErrors.length > 0 && (
+              <Card className="mt-4 border border-danger-200 bg-danger-50" >
+                <Card.Content className="p-4">
+                  <p className="text-danger text-sm font-medium mb-2">Answer key validation errors:</p>
+                  <ul className="space-y-1">
+                    {keyErrors.map((e, i) => <li key={i} className="text-danger-500 text-xs flex items-start gap-1"><AlertTriangle size={12} className="mt-0.5 flex-shrink-0" /> {e}</li>)}
+                  </ul>
+                </Card.Content>
+              </Card>
             )}
-          </div>
 
-          {keyErrors.length > 0 && (
-            <div className="mt-4 p-4 rounded-xl bg-red-500/8 border border-red-500/20">
-              <p className="text-red-400 text-sm font-medium mb-2">Answer key validation errors:</p>
-              <ul className="space-y-1">
-                {keyErrors.map((e, i) => <li key={i} className="text-red-400/70 text-xs">• {e}</li>)}
-              </ul>
-            </div>
-          )}
-
-          {keyWarnings.length > 0 && (
-            <div className="mt-4 p-3 rounded-xl bg-amber-500/8 border border-amber-500/20">
-              {keyWarnings.map((w, i) => <p key={i} className="text-amber-400/70 text-xs">⚠ {w}</p>)}
-            </div>
-          )}
+            {keyWarnings.length > 0 && (
+              <Card className="mt-4 border border-warning-200 bg-warning-50" >
+                <Card.Content className="p-3">
+                  {keyWarnings.map((w, i) => <p key={i} className="text-warning-600 text-xs flex items-center gap-1"><AlertTriangle size={12} /> {w}</p>)}
+                </Card.Content>
+              </Card>
+            )}
+          </Card.Content>
+        </Card>
         </div>
-
+        <div className="grid grid-cols-5 ">
+          
         {error && (
-          <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
-            {error}
-          </div>
+          <Card className="border border-danger-200 bg-danger-50" >
+            <Card.Content className="p-4 text-danger text-sm">{error}</Card.Content>
+          </Card>
         )}
 
         <div className="flex gap-3">
-          <button type="submit" className="btn btn-primary flex-1" disabled={saving}>
-            {saving ? <><span className="spinner inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full" /> Creating...</> : "Create Test"}
-          </button>
-          <a href="/tests" className="btn btn-secondary">Cancel</a>
+          <Button type="submit" variant="primary" className="flex-1" isPending={saving}>
+            {saving ? "Creating..." : "Create Test"}
+          </Button>
+          <Link href="/tests"><Button variant="outline">Cancel</Button></Link>
         </div>
+        </div>
+
+     
+     
       </form>
     </div>
   );
