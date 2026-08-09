@@ -66,7 +66,7 @@ export default function GenerateSheetModal({ onClose }: { onClose: () => void })
               <input
                 type="text"
                 className="input"
-                placeholder="e.g. GCA Khaki Factory"
+                placeholder="e.g. OMRly Institute"
                 value={instituteName}
                 onChange={(e) => setInstituteName(e.target.value)}
               />

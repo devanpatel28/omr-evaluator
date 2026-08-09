@@ -1,6 +1,6 @@
-# GCA OMR Evaluation System
+# OMRly Evaluation System
 
-A **local-first OMR sheet evaluation system** for GCA The Khaki Factory.
+A **local-first OMR sheet evaluation system** for OMRly.
 Processes scanned/photographed OMR answer sheets with real computer vision (OpenCV), no cloud AI, no internet required.
 
 ---
@@ -81,7 +81,7 @@ INFO:     Application startup complete.
 
 The backend will automatically:
 - Create the SQLite database at `data/database/omr.sqlite`
-- Create the default OMR template at `data/templates/gca-default-200.json`
+- Create the default OMR template at `data/templates/omrly-default-200.json`
 
 ### Step 2: Start the Frontend (Next.js)
 
@@ -128,7 +128,7 @@ data\
 │       ├── processed.jpg   ← Detection overlay
 │       └── result.json     ← Result snapshot
 └── templates\
-    └── gca-default-200.json ← OMR template
+    └── omrly-default-200.json ← OMR template
 ```
 
 ---
@@ -188,7 +188,7 @@ question,answer
 
 ## Calibrating the OMR Template
 
-The default template is calibrated for the **GCA Khaki Factory 200-question OMR** sheet (4 columns × 50 rows, options A–E horizontal).
+The default template is calibrated for the **OMRly 200-question OMR** sheet (4 columns × 50 rows, options A–E horizontal).
 
 To calibrate for a different sheet:
 
@@ -314,6 +314,3 @@ SQLite Database (data/database/omr.sqlite)
 
 ---
 
-## Contact
-
-GCA The Khaki Factory — Tel: 9512262625

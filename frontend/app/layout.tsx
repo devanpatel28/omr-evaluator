@@ -6,8 +6,8 @@ import Sidebar from "@/components/Sidebar";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "GCA OMR Evaluation System",
-  description: "Local-first OMR sheet evaluation system for GCA The Khaki Factory. Process up to 200 MCQ answer sheets with automatic bubble detection.",
+  title: "OMRly Evaluation System",
+  description: "Local-first OMR sheet evaluation system for OMRly. Process up to 200 MCQ answer sheets with automatic bubble detection.",
 };
 
 export default function RootLayout({

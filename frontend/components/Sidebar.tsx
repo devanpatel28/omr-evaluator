@@ -28,8 +28,8 @@ export default function Sidebar() {
             OMR
           </div>
           <div>
-            <p className="text-slate-900 font-semibold text-sm leading-none">GCA Evaluator</p>
-            <p className="text-slate-500 text-xs mt-0.5">Khaki Factory</p>
+            <p className="text-slate-900 font-semibold text-sm leading-none">OMRly</p>
+            <p className="text-slate-500 text-xs mt-0.5">Evaluator</p>
           </div>
         </div>
       </div>

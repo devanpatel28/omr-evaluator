@@ -53,7 +53,7 @@ export default function DashboardPage() {
       <div className="flex items-start justify-between mb-8">
         <div>
           <h1 className="text-3xl font-bold text-slate-900">OMR Evaluation System</h1>
-          <p className="text-slate-500 mt-1 text-sm">GCA The Khaki Factory — Local OMR Processing</p>
+          <p className="text-slate-500 mt-1 text-sm">OMRly — Local OMR Processing</p>
         </div>
         <Link href="/tests/new" className="btn btn-primary">
           <span>+</span> Create Test

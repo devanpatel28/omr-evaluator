@@ -1,6 +1,6 @@
 """
 OMR Evaluation System — FastAPI Backend
-GCA The Khaki Factory
+OMRly
 """
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -26,7 +26,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title=settings.APP_NAME,
     version=settings.APP_VERSION,
-    description="Local-first OMR Sheet Evaluation System for GCA The Khaki Factory",
+    description="Local-first OMR Sheet Evaluation System for OMRly",
     lifespan=lifespan,
 )
 

@@ -2,7 +2,9 @@ import json
 from typing import List, Optional
 # pyrefly: ignore [missing-import]
 from fastapi import APIRouter, HTTPException, Form, UploadFile, File
+# pyrefly: ignore [missing-import]
 from fastapi.responses import StreamingResponse
+# pyrefly: ignore [missing-import]
 from pydantic import BaseModel
 import io
 from app.core.config import settings
@@ -94,7 +96,7 @@ def list_templates():
 
 @router.get("/default")
 def get_default_template():
-    """Get or create the default GCA template."""
+    """Get or create the default OMRly template."""
     template = ensure_default_template(settings.TEMPLATES_DIR)
     return template.to_dict()
 

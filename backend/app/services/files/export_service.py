@@ -131,7 +131,7 @@ def export_to_pdf(answers: list, evaluation: object, test: object) -> bytes:
     date_str = evaluation.created_at.strftime("%d %b %Y %H:%M") if evaluation.created_at else "—"
 
     story.append(Paragraph("OMR Evaluation Result", title_style))
-    story.append(Paragraph(f"GCA The Khaki Factory", subtitle_style))
+    story.append(Paragraph(f"OMRly", subtitle_style))
     story.append(HRFlowable(width="100%", thickness=1, color=colors.HexColor("#e5e7eb")))
     story.append(Spacer(1, 0.3*cm))
 

@@ -1,6 +1,6 @@
 """
 Scoring rules and constants.
-These are the default rules for the GCA OMR system.
+These are the default rules for the OMRly system.
 """
 
 # Result types

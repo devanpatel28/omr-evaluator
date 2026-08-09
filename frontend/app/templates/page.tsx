@@ -24,7 +24,7 @@ export default function TemplatesPage() {
     if (!localTemplate) return;
     setSaving(true);
     try {
-      await updateTemplate("gca-default-200", localTemplate);
+      await updateTemplate("omrly-default-200", localTemplate);
       setTemplate(localTemplate);
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
@@ -90,7 +90,7 @@ export default function TemplatesPage() {
           <div className="card">
             <h2 className="font-semibold text-slate-900 mb-2">Column Sections</h2>
             <p className="text-xs text-slate-500 mb-4">
-              The GCA sheet has 4 columns of 50 questions each. Adjust the coordinates to match the
+              The OMRly sheet has 4 columns of 50 questions each. Adjust the coordinates to match the
               actual bubble positions after perspective correction to 1000×1400 px.
             </p>
 
@@ -156,7 +156,7 @@ export default function TemplatesPage() {
             </div>
             <div className="mt-4 p-3 rounded-xl bg-amber-500/6 border border-amber-500/15">
               <p className="text-amber-400 text-xs">
-                ⚠ The default values are calibrated for the GCA Khaki Factory 200-question OMR sheet normalized to 1000×1400 px.
+                ⚠ The default values are calibrated for the OMRly 200-question OMR sheet normalized to 1000×1400 px.
                 Changing these values affects all future evaluations. Existing evaluations are not affected.
               </p>
             </div>

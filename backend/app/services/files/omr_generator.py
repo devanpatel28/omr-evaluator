@@ -74,7 +74,7 @@ def generate_omr_sheet_pdf(
         except Exception as e:
             print(f"Error drawing logo: {e}")
 
-    c.drawCentredString(page_width / 2, header_y, institute_name or "GCA Khaki Factory")
+    c.drawCentredString(page_width / 2, header_y, institute_name or "OMRly")
     
     c.setFont("Helvetica", 24)
     c.drawCentredString(page_width / 2, header_y - 40, exam_name or "OMR Sheet - 200 Questions")

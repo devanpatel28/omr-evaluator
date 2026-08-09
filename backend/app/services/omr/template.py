@@ -1,7 +1,7 @@
 """
 OMR Template System — defines bubble grid coordinates for a specific OMR sheet layout.
 
-The GCA "Khaki Factory" OMR sheet has:
+The OMRly sheet has:
   - 200 questions in 4 columns of 50 rows each
   - 5 options per question: A, B, C, D, E (horizontal)
   - Normalized to 1000×1400 pixels after perspective correction
@@ -94,9 +94,9 @@ class OMRTemplate:
         )
 
 
-# ─── GCA Default Template (calibrated to omr.jpg) ─────────────────────────────
+# ─── OMRly Default Template (calibrated to omr.jpg) ─────────────────────────────
 #
-# The GCA sheet (1000×1400 normalized) has 4 columns × 50 rows.
+# The OMRly sheet (1000×1400 normalized) has 4 columns × 50 rows.
 # After analysis of the provided omr.jpg:
 #   - Header/roll area occupies top ~18% (0-252px)
 #   - Answer grid starts at ~y=252 and ends at ~y=1340
@@ -108,7 +108,7 @@ class OMRTemplate:
 # These values are calibrated estimates. Fine-tune via the calibration tool.
 
 def create_default_gca_template() -> OMRTemplate:
-    """Create the default GCA 200-question OMR template."""
+    """Create the default OMRly 200-question OMR template."""
     row_height = 22.5
     option_spacing = 26.3
     bubble_radius = 7.0
@@ -133,7 +133,7 @@ def create_default_gca_template() -> OMRTemplate:
         ))
 
     return OMRTemplate(
-        name="GCA Default 200 Question OMR",
+        name="OMRly Default 200 Question OMR",
         page_width=1000,
         page_height=1400,
         total_questions=200,
@@ -158,10 +158,10 @@ def save_template(template: OMRTemplate, template_path: str) -> None:
 
 def ensure_default_template(templates_dir: Path) -> OMRTemplate:
     """
-    Ensure the default GCA template exists in templates_dir.
+    Ensure the default OMRly template exists in templates_dir.
     Creates it if missing.
     """
-    default_path = templates_dir / "gca-default-200.json"
+    default_path = templates_dir / "omrly-default-200.json"
     if not default_path.exists():
         template = create_default_gca_template()
         save_template(template, str(default_path))
