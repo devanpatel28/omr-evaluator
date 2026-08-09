@@ -1,0 +1,51 @@
+{
+  "name": "GCA Default 200 Question OMR",
+  "page_width": 1000,
+  "page_height": 1400,
+  "total_questions": 200,
+  "options": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "E"
+  ],
+  "sections": [
+    {
+      "start_question": 1,
+      "end_question": 50,
+      "start_x": 80.0,
+      "start_y": 254.3,
+      "row_height": 22.5,
+      "option_spacing": 26.3,
+      "bubble_radius": 7.0
+    },
+    {
+      "start_question": 51,
+      "end_question": 100,
+      "start_x": 344.0,
+      "start_y": 254.3,
+      "row_height": 22.5,
+      "option_spacing": 26.3,
+      "bubble_radius": 7.0
+    },
+    {
+      "start_question": 101,
+      "end_question": 150,
+      "start_x": 606.0,
+      "start_y": 254.3,
+      "row_height": 22.5,
+      "option_spacing": 26.3,
+      "bubble_radius": 7.0
+    },
+    {
+      "start_question": 151,
+      "end_question": 200,
+      "start_x": 870.0,
+      "start_y": 254.3,
+      "row_height": 22.5,
+      "option_spacing": 26.3,
+      "bubble_radius": 7.0
+    }
+  ]
+}
