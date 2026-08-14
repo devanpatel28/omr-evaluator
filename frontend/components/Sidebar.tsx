@@ -44,7 +44,7 @@ export default function Sidebar() {
             <Link
               key={item.href}
               href={item.href}
-              className={`flex items-center gap-3 px-5 py-2.5 rounded-full hover:bg-surface-tertiary transition-all duration-300 group text-base ${
+              className={`flex items-center gap-3 px-5 py-2.5 rounded-full hover:bg-surface-tertiary transition-all duration-200 group text-base ${
                 isActive
                   ? "bg-surface-tertiary text-foreground"
                   : "text-default-600 hover:text-foreground hover:bg-default-100"

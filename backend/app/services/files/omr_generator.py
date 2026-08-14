@@ -2,6 +2,7 @@ import io
 from typing import Optional
 from reportlab.pdfgen import canvas
 from reportlab.lib.utils import ImageReader
+# pyrefly: ignore [missing-import]
 from PIL import Image
 from app.services.omr.template import OMRTemplate
 
@@ -59,12 +60,16 @@ def generate_omr_sheet_pdf(
             img_io = io.BytesIO(logo_bytes)
             # Use PIL to read image, check format
             pil_img = Image.open(img_io)
-            # Convert to RGB to ensure compatibility with reportlab if it's RGBA or something
-            if pil_img.mode != "RGB":
+            # Handle transparent images by compositing onto a white background
+            if pil_img.mode in ("RGBA", "LA", "PA"):
+                background = Image.new("RGB", pil_img.size, (255, 255, 255))
+                background.paste(pil_img, mask=pil_img.split()[-1])  # Use alpha channel as mask
+                pil_img = background
+            elif pil_img.mode != "RGB":
                 pil_img = pil_img.convert("RGB")
                 
             img_io_rgb = io.BytesIO()
-            pil_img.save(img_io_rgb, format="JPEG")
+            pil_img.save(img_io_rgb, format="PNG")
             img_io_rgb.seek(0)
             
             logo_img = ImageReader(img_io_rgb)
