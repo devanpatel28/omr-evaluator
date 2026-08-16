@@ -2,7 +2,9 @@
 Visualization — overlays detected answers and bubble regions on the processed image.
 Used for debugging, review UI, and result verification.
 """
+# pyrefly: ignore [missing-import]
 import cv2
+# pyrefly: ignore [missing-import]
 import numpy as np
 import base64
 from typing import Dict, Optional, List, Tuple
@@ -126,7 +128,7 @@ def crop_question_row(
     warped_gray: np.ndarray,
     template: OMRTemplate,
     question_number: int,
-    row_alignments: Optional[Dict[float, Tuple[float, float]]] = None,
+    row_alignments: Optional[Dict[float, Tuple[float, float, float, float]]] = None,
 ) -> Optional[str]:
     """
     Return a base64-encoded JPEG crop of the bubble row for a question.

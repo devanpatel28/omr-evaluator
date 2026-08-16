@@ -1,5 +1,6 @@
 # pyrefly: ignore [missing-import]
 import cv2
+# pyrefly: ignore [missing-import]
 import numpy as np
 from typing import Dict, Tuple
 from app.services.omr.template import OMRTemplate

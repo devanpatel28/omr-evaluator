@@ -2,7 +2,9 @@
 Bubble detection — extracts fill ratio for each bubble region.
 Works on the normalized (perspective-corrected) grayscale image.
 """
+# pyrefly: ignore [missing-import]
 import cv2
+# pyrefly: ignore [missing-import]
 import numpy as np
 from typing import List, Tuple, Optional, Dict
 from app.services.omr.template import BubbleCoord, OMRTemplate

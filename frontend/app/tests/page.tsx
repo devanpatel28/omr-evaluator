@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Card, Button, Chip, Modal, ModalBackdrop, ModalContainer, ModalDialog, ModalHeader, ModalBody, ModalFooter, useOverlayState } from "@heroui/react";
-import { Plus, ClipboardList, CheckCircle, AlertTriangle, Trash2, ExternalLink, Play } from "lucide-react";
+import { Plus, ClipboardList, CheckCircle, AlertTriangle, WindowExpandBottomRight, Checklist, Trash6 } from "reicon-react";
 import { fetchTests, deleteTest } from "@/lib/api";
 import type { Test } from "@/types";
 
@@ -42,12 +42,12 @@ export default function TestsPage() {
 
   return (
     <div className="p-8">
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex  items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Tests</h1>
           <p className="text-default-500 text-sm mt-1">Manage your OMR evaluation tests</p>
         </div>
-        <Link href="/tests/new"><Button   variant="primary" >Create Test</Button></Link>
+        <Link href="/tests/new"><Button   variant="primary" ><Plus/>Create Test</Button></Link>
       </div>
 
       {loading ? (
@@ -66,12 +66,12 @@ export default function TestsPage() {
       ) : (
         <div className="space-y-4">
           {tests.map(test => (
-            <Card variant="secondary" key={test.id}  className="hover:border-primary-200 transition-all">
-              <Card.Content className="p-5 flex flex-row items-center justify-between">
+            <Card variant="secondary" key={test.id}  className="shadow-none">
+              <Card.Content className="p-2 flex flex-row items-center justify-between">
                 <div className="flex items-center gap-5">
-                  <div className="w-12 h-12 rounded-xl bg-primary-50 flex items-center justify-center text-primary font-bold text-lg border border-primary-100">
+                  <Card className="w-12 h-12 rounded-xl flex items-center justify-center text-primary font-bold shadow-none">
                     {test.total_questions}
-                  </div>
+                  </Card>
                   <div>
                     <h3 className="font-semibold text-foreground">{test.name}</h3>
                     <p className="text-xs text-default-500 mt-1 flex items-center gap-1">
@@ -90,11 +90,11 @@ export default function TestsPage() {
                 </div>
                 <div className="flex items-center gap-2">
                   <Link href={`/tests/${test.id}`}>
-                    <Button size="sm" variant="secondary">Open</Button>
+                    <Button size="sm" variant="secondary" > Open</Button>
                   </Link>
                   {test.answer_key_count > 0 && (
                     <Link href={`/tests/${test.id}/evaluate`}>
-                      <Button size="sm" variant="primary">Evaluate</Button>
+                      <Button size="sm" variant="primary"><Checklist />Evaluate</Button>
                     </Link>
                   )}
                   <Button
@@ -102,6 +102,7 @@ export default function TestsPage() {
                     variant="danger"
                     onPress={() => confirmDelete(test.id, test.name)}
                   >
+                    <Trash6 />
                     Delete
                   </Button>
                 </div>

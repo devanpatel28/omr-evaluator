@@ -5,15 +5,13 @@ import { Card, Button, Chip, ProgressBar } from "@heroui/react";
 import {
   Plus,
   ClipboardList,
-  BarChart3,
   AlertTriangle,
   ArrowRight,
-  FileText,
+  ChartPie, DiplomaCheck, DocText, FileText, Download,
   CheckCircle,
-  BookOpen,
-  Download,
-  KeyRound,
-} from "lucide-react";
+  Chart4,
+  Notebook2
+} from "reicon-react";
 import { fetchTests, fetchEvaluations } from "@/lib/api";
 import type { Test, EvaluationSummary } from "@/types";
 
@@ -33,7 +31,7 @@ function StatCard({
   iconColor: string;
 }) {
   return (
-    <Card variant="tertiary">
+    <Card variant="secondary">
       <Card.Content className="p-5">
         <div className="flex items-start justify-between">
           <div>
@@ -47,11 +45,11 @@ function StatCard({
               <p className="text-xs text-default-400 mt-2">{sublabel}</p>
             )}
           </div>
-          <div
-            className={`w-10 h-10 rounded-xl flex items-center justify-center ${iconBg} ${iconColor} shrink-0`}
+          <Card
+            className={`w-16 h-16 flex items-center shadow-none justify-center ${iconBg} ${iconColor} shrink-0`}
           >
             <Icon size={32} />
-          </div>
+          </Card>
         </div>
       </Card.Content>
     </Card>
@@ -147,7 +145,7 @@ export default function DashboardPage() {
           </p>
         </div>
         <Link href="/tests/new">
-          <Button >
+          <Button>
             <Plus/>
             Create New Test
           </Button>
@@ -185,31 +183,31 @@ export default function DashboardPage() {
           label="Total Tests"
           value={tests.length}
           sublabel={tests.length > 0 ? `${totalEvals} total evaluations run` : "No tests created yet"}
-          icon={ClipboardList}
-          iconBg="bg-primary-100"
-          iconColor="text-primary"
+          icon={DocText}
+          iconBg="bg-orange-50"
+          iconColor="text-orange-500"
         />
         <StatCard
           label="Total Evaluations"
           value={totalEvals}
           sublabel={recentEvals.length > 0 ? `${finalizedCount} finalized recently` : "Upload a sheet to begin"}
-          icon={BarChart3}
-          iconBg="bg-secondary-100"
-          iconColor="text-secondary"
+          icon={ChartPie}
+          iconBg="bg-blue-50"
+          iconColor="text-blue-500"
         />
         <StatCard
           label="Ready to Evaluate"
           value={readyTests}
           sublabel={tests.length > 0 ? `${readyPct}% of tests have answer keys` : "Add an answer key to start"}
-          icon={CheckCircle}
-          iconBg="bg-success-100"
-          iconColor="text-success"
+          icon={DiplomaCheck}
+          iconBg="bg-green-50"
+          iconColor="text-green-500"
         />
       </div>
 
       {/* Recent Tests + Evaluations */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card variant="tertiary">
+        <Card variant="secondary">
           <Card.Content className="p-2">
             <div className="flex items-center justify-between mb-5">
               <h2 className="font-semibold text-foreground">Recent Tests</h2>
@@ -243,14 +241,15 @@ export default function DashboardPage() {
             ) : (
               <div className="space-y-3">
                 {tests.slice(0, 5).map((test) => (
-                  <Link
+                  <Card key={test.id}> 
+                    <Link
                     key={test.id}
                     href={`/tests/${test.id}`}
-                    className="flex items-center justify-between p-4 rounded-xl bg-default-50 hover:bg-default-100 border border-default-100 hover:border-primary-200 transition-all group"
+                    className="flex items-center justify-between"
                   >
                     <div className="flex items-center gap-3 min-w-0">
                       <div className="w-9 h-9 rounded-lg bg-primary-100 text-primary flex items-center justify-center shrink-0">
-                        <FileText size={16} />
+                        <FileText size={24} className="text-blue-500" />
                       </div>
                       <div className="min-w-0">
                         <p className="text-sm font-medium text-foreground group-hover:text-primary transition-colors truncate">
@@ -277,6 +276,7 @@ export default function DashboardPage() {
                       />
                     </div>
                   </Link>
+                  </Card>
                 ))}
               </div>
             )}
@@ -284,7 +284,7 @@ export default function DashboardPage() {
         </Card>
 
         {/* Recent Evaluations */}
-        <Card variant="tertiary">
+        <Card variant="secondary">
           <Card.Content className="p-3">
             <div className="flex items-center justify-between mb-5">
               <h2 className="font-semibold text-foreground">Recent Evaluations</h2>
@@ -304,17 +304,18 @@ export default function DashboardPage() {
               </div>
             ) : recentEvals.length === 0 ? (
               <EmptyState
-                icon={BarChart3}
+                icon={Chart4}
                 title="No evaluations yet"
                 subtitle="Upload an OMR sheet to get started"
               />
             ) : (
               <div className="space-y-3">
                 {recentEvals.map((ev) => (
-                  <Link
+                 <Card key={ev.id}>
+                   <Link
                     key={ev.id}
                     href={`/evaluations/${ev.id}`}
-                    className="flex items-center justify-between p-4 rounded-xl bg-default-50 hover:bg-default-100 border border-default-100 hover:border-secondary-200 transition-all group"
+                    className="flex items-center justify-between"
                   >
                     <div>
                       <div className="flex items-baseline gap-1.5">
@@ -348,6 +349,7 @@ export default function DashboardPage() {
                       )}
                     </div>
                   </Link>
+                 </Card>
                 ))}
               </div>
             )}
@@ -355,25 +357,8 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      {/* Ready-to-evaluate progress */}
-      {tests.length > 0 && (
-        <Card variant="tertiary" className="mt-6 border border-default-200 shadow-none">
-          <Card.Content className="p-3">
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="font-semibold text-foreground text-sm">
-                Answer key coverage
-              </h2>
-              <span className="text-xs text-default-500">
-                {readyTests} of {tests.length} tests ready
-              </span>
-            </div>
-            <ProgressBar value={readyPct} color="success" className="h-2" />
-          </Card.Content>
-        </Card>
-      )}
-
       {/* Quick guide */}
-      <Card variant="tertiary" className="mt-6 shadow-none">
+      <Card variant="secondary" className="mt-6 shadow-none">
         <Card.Content className="p-3">
           <h2 className="font-semibold text-foreground mb-4">Quick Start Guide</h2>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -384,22 +369,22 @@ export default function DashboardPage() {
                 desc: "Set test name, question count, and scoring rules",
                 href: "/tests/new",
                 icon: FileText,
-                color: "bg-primary-100 text-primary",
+                color: "bg-blue-100 text-blue-600",
               },
               {
                 step: "2",
                 title: "Upload Answer Key",
                 desc: "Import JSON or CSV answer key for the test",
                 href: "/tests",
-                icon: BookOpen,
-                color: "bg-secondary-100 text-secondary",
+                icon: Notebook2,
+                color: "bg-orange-100 text-orange-600",
               },
               {
                 step: "3",
                 title: "Process OMR",
                 desc: "Upload a photo or scan of a filled OMR sheet",
                 href: "/tests",
-                icon: BarChart3,
+                icon: Chart4,
                 color: "bg-purple-100 text-purple-600",
               },
               {

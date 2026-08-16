@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LayoutDashboard, ClipboardList, BarChart3, Grid3x3, Settings } from "lucide-react";
+import { CheckListSquare } from "reicon-react";
 
 interface NavItem {
   href: string;
@@ -23,14 +24,12 @@ export default function Sidebar() {
   return (
     <aside className="w-64 bg-white border-r border-default-200 flex flex-col h-screen sticky top-0">
       {/* Logo */}
-      <div className="px-6 py-5 border-b border-default-200">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-9 rounded-xl bg-accent flex items-center justify-center text-white font-bold text-sm shadow-lg shadow-blue-500/20">
-            OMR
-          </div>
+      <div className="px-2 py-2 border-b border-default-200">
+        <div className="px-4 py-2 flex items-center gap-3">
+          <CheckListSquare size={42} className="bg-cyan-100  text-cyan-600 rounded-xl" />
           <div>
-            <p className="text-foreground font-semibold text-sm leading-none">OMRly</p>
-            <p className="text-default-500 text-xs mt-0.5">Evaluator</p>
+            <p className="text-cyan-600 font-semibold text-base leading-none">OMRly</p>
+            <p className="text-cyan-500 text-sm mt-0.5">Evaluator</p>
           </div>
         </div>
       </div>

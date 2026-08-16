@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Modal, Button, Card } from "@heroui/react";
 import { useOverlayState } from "@heroui/react";
-import { Camera, Loader2, CheckCircle2, X } from "lucide-react";
+import { Camera, CheckCircle, Link3, MonitorPhone, } from "reicon-react";
 import QRCode from "qrcode";
 
 interface Props {
@@ -129,19 +129,19 @@ export default function CameraScanModal({ testId, onImageReady, onClose }: Props
           <Modal.Header className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-default-200">
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-xl bg-primary-100 flex items-center justify-center">
-                <Camera size={18} className="text-primary" />
+                <MonitorPhone size={32} className="text-primary" />
               </div>
               <div>
                 <p className="font-bold text-foreground text-base leading-tight">Scan by Camera</p>
                 <p className="text-xs text-default-400 leading-tight mt-0.5">Open on your phone (same network)</p>
               </div>
             </div>
-            <button
+            {/* <button
               onClick={handleClose}
               className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-default-100 transition-colors text-default-400"
             >
               <X size={16} />
-            </button>
+            </button> */}
           </Modal.Header>
 
           {/* Body */}
@@ -150,7 +150,7 @@ export default function CameraScanModal({ testId, onImageReady, onClose }: Props
             {/* LOADING */}
             {status === "loading" && (
               <div className="flex flex-col items-center gap-3 py-8">
-                <Loader2 size={32} className="animate-spin text-primary" />
+                <Link3 size={32} className="animate-spin text-primary" />
                 <p className="text-sm text-default-500">Generating scan code…</p>
               </div>
             )}
@@ -168,7 +168,7 @@ export default function CameraScanModal({ testId, onImageReady, onClose }: Props
               <div className="flex flex-col items-center gap-5">
 
                 {/* 4-digit code */}
-                <div className="w-full">
+                {/* <div className="w-full">
                   <p className="text-xs text-center text-default-400 uppercase tracking-widest mb-3">
                     Enter this code on your phone
                   </p>
@@ -183,7 +183,7 @@ export default function CameraScanModal({ testId, onImageReady, onClose }: Props
                       </div>
                     ))}
                   </div>
-                </div>
+                </div> */}
 
                 {/* Divider */}
                 <div className="flex items-center gap-3 w-full">
@@ -199,14 +199,14 @@ export default function CameraScanModal({ testId, onImageReady, onClose }: Props
                     <img src={qrDataUrl} alt="Scan QR code" width={200} height={200} />
                   ) : (
                     <div className="w-[200px] h-[200px] flex items-center justify-center">
-                      <Loader2 size={24} className="animate-spin text-default-300" />
+                      <Link3 size={24} className="animate-spin text-default-300" />
                     </div>
                   )}
                 </div>
 
                 {/* URL */}
-                <Card variant="tertiary" className="w-full">
-                  <Card.Content className="px-3 py-2 text-center">
+                <Card variant="secondary" className="w-full">
+                  <Card.Content className="text-center">
                     <p className="text-xs break-all font-mono text-primary">{scanUrl}</p>
                   </Card.Content>
                 </Card>
@@ -236,7 +236,7 @@ export default function CameraScanModal({ testId, onImageReady, onClose }: Props
                   className="w-16 h-16 rounded-full bg-success-100 border-2 border-success-300 flex items-center justify-center"
                   style={{ animation: "scanPop 0.4s cubic-bezier(0.34,1.56,0.64,1) both" }}
                 >
-                  <CheckCircle2 size={32} className="text-success" />
+                  <CheckCircle size={32} className="text-success" />
                 </div>
                 <p className="font-bold text-foreground text-lg">Image Received!</p>
                 <p className="text-sm text-default-500">Loading into evaluator…</p>
@@ -247,7 +247,7 @@ export default function CameraScanModal({ testId, onImageReady, onClose }: Props
           {/* Footer */}
           {(status === "waiting" || status === "error") && (
             <Modal.Footer className="px-6 pb-5 pt-0">
-              <Button onPress={handleClose} variant="outline" className="w-full">
+              <Button onPress={handleClose} variant="danger-soft" className="w-full">
                 Cancel
               </Button>
             </Modal.Footer>

@@ -7,12 +7,38 @@ export default function SettingsPage() {
   const [settings, setSettings] = useState<any>(null);
   const [local, setLocal] = useState<any>(null);
 
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+
   useEffect(() => {
     fetch("http://localhost:8000/api/settings")
       .then(r => r.json())
       .then(s => { setSettings(s); setLocal({ ...s }); })
       .catch(() => {});
   }, []);
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      const res = await fetch("http://localhost:8000/api/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fill_threshold: local.fill_threshold,
+          confidence_threshold: local.confidence_threshold,
+          ambiguity_margin: local.ambiguity_margin,
+        }),
+      });
+      if (res.ok) {
+        setSaveSuccess(true);
+        setTimeout(() => setSaveSuccess(false), 3000);
+      }
+    } catch (e) {
+      console.error("Failed to save settings", e);
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   return (
     <div className="p-8 max-w-2xl">
@@ -62,12 +88,17 @@ export default function SettingsPage() {
                 </div>
               ))}
 
-              <div className="p-3 rounded-xl bg-warning-50 border border-warning-200 mt-6 flex items-start gap-2">
-                <AlertTriangle size={16} className="text-warning-500 mt-0.5 flex-shrink-0" />
-                <p className="text-warning-600 text-xs leading-relaxed">
-                  These sliders show current values for reference only. To apply new values, update
-                  the environment variables in the backend and restart the server.
-                </p>
+              <div className="mt-8 flex items-center gap-4">
+                <Button 
+                  color="primary" 
+                  onPress={handleSave} 
+                  isLoading={isSaving}
+                >
+                  Save Changes
+                </Button>
+                {saveSuccess && (
+                  <span className="text-success-600 text-sm font-medium">Settings saved successfully!</span>
+                )}
               </div>
             </div>
           ) : (

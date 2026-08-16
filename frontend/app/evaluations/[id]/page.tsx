@@ -2,10 +2,11 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { Card, Button, Chip } from "@heroui/react";
+import { Card, Button, Chip, Disclosure, Table, Tabs } from "@heroui/react";
 import { Download, ChevronRight, Edit, Eye, EyeOff, Image as ImageIcon } from "lucide-react";
 import { fetchEvaluation, getExportUrl, getOriginalImageUrl, getProcessedImageUrl } from "@/lib/api";
 import type { Evaluation, EvaluationAnswer } from "@/types";
+import ImageLightbox from "@/components/ImageLightbox";
 
 const RESULT_CHIP: Record<string, { color: "success" | "danger" | "warning" | "default"; label: string }> = {
   CORRECT: { color: "success", label: "CORRECT" },
@@ -15,16 +16,15 @@ const RESULT_CHIP: Record<string, { color: "success" | "danger" | "warning" | "d
   AMBIGUOUS: { color: "default", label: "AMBIGUOUS" },
 };
 
-function DonutChart({ correct, wrong, e, unanswered, ambiguous }: {
-  correct: number; wrong: number; e: number; unanswered: number; ambiguous: number;
+function DonutChart({ correct, wrong, e, unanswered }: {
+  correct: number; wrong: number; e: number; unanswered: number;
 }) {
-  const total = correct + wrong + e + unanswered + ambiguous || 1;
+  const total = correct + wrong + e + unanswered || 1;
   const segments = [
     { value: correct, color: "#22c55e", label: "Correct" },
     { value: wrong, color: "#ef4444", label: "Wrong" },
     { value: e, color: "#f97316", label: "E" },
     { value: unanswered, color: "#94a3b8", label: "Unanswered" },
-    { value: ambiguous, color: "#f59e0b", label: "Ambiguous" },
   ];
 
   const r = 70, cx = 90, cy = 90, strokeW = 22;
@@ -41,7 +41,7 @@ function DonutChart({ correct, wrong, e, unanswered, ambiguous }: {
 
   return (
     <svg viewBox="0 0 180 180" className="w-44 h-44">
-      <circle cx={cx} cy={cy} r={r} fill="none" stroke="#f1f5f9" strokeWidth={strokeW} />
+      <circle cx={cx} cy={cy} r={r} fill="none" stroke="#ffffff" strokeWidth={strokeW} />
       {arcs.map((arc, i) => arc.value > 0 && (
         <circle
           key={i}
@@ -69,6 +69,7 @@ export default function EvaluationPage() {
   const [filter, setFilter] = useState("ALL");
   const [showOriginal, setShowOriginal] = useState(false);
   const [showProcessed, setShowProcessed] = useState(false);
+  const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
 
   useEffect(() => {
     fetchEvaluation(evalId)
@@ -89,7 +90,7 @@ export default function EvaluationPage() {
   const attempted = evaluation.correct_count + evaluation.wrong_count + evaluation.e_count;
   const accuracy = attempted > 0 ? ((evaluation.correct_count / attempted) * 100).toFixed(1) : "0.0";
 
-  const FILTERS = ["ALL", "CORRECT", "WRONG", "E", "UNANSWERED", "AMBIGUOUS"];
+  const FILTERS = ["ALL", "CORRECT", "WRONG", "E", "UNANSWERED"];
 
   return (
     <div className="p-6">
@@ -124,7 +125,7 @@ export default function EvaluationPage() {
       </div>
 
       {/* Score Hero */}
-      <Card  className="mb-5 border border-default-200 bg-gradient-to-br from-slate-50 to-blue-50">
+      <Card variant="secondary" className="mb-5 shadow-none">
         <Card.Content className="p-6">
           <div className="flex flex-col lg:flex-row items-center gap-8">
             {/* Donut */}
@@ -134,7 +135,6 @@ export default function EvaluationPage() {
                 wrong={evaluation.wrong_count}
                 e={evaluation.e_count}
                 unanswered={evaluation.unanswered_count}
-                ambiguous={evaluation.ambiguous_count}
               />
               <div className="absolute inset-0 flex flex-col items-center justify-center">
                 <span className="text-4xl font-black text-foreground">{evaluation.total_marks.toFixed(1)}</span>
@@ -150,7 +150,7 @@ export default function EvaluationPage() {
                 { label: "E (Don't Know)", value: evaluation.e_count, marks: `${(evaluation.e_count * evaluation.e_marks_snapshot).toFixed(2)}`, color: "text-warning", bg: "bg-warning-50 border-warning-100" },
                 { label: "Unanswered", value: evaluation.unanswered_count, marks: "0.00", color: "text-default-500", bg: "bg-default-50 border-default-200" },
               ].map(item => (
-                <div key={item.label} className={`flex items-center gap-3 p-3 rounded-xl border ${item.bg}`}>
+                <Card key={item.label} className={`flex items-left gap-4 p-4  ${item.bg}`}>
                   <div className="flex-1 min-w-0">
                     <p className="text-xs text-default-500">{item.label}</p>
                     <div className="flex items-baseline gap-2">
@@ -158,7 +158,7 @@ export default function EvaluationPage() {
                       <span className="text-xs text-default-400">{item.marks}</span>
                     </div>
                   </div>
-                </div>
+                </Card>
               ))}
             </div>
 
@@ -190,125 +190,270 @@ export default function EvaluationPage() {
       {/* Category question lists */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
         {[
-          { key: "CORRECT", label: "Correct", color: "border-success-200 bg-success-50 text-success-700" },
-          { key: "WRONG", label: "Wrong", color: "border-danger-200 bg-danger-50 text-danger-700" },
-          { key: "E", label: "E Don't Know", color: "border-warning-200 bg-warning-50 text-warning-700" },
-          { key: "UNANSWERED", label: "Unanswered", color: "border-default-200 bg-default-50 text-default-600" },
+          { key: "CORRECT", label: "Correct" },
+          { key: "WRONG", label: "Wrong" },
+          { key: "E", label: "E Don't Know" },
+          { key: "UNANSWERED", label: "Unanswered" },
         ].map(cat => (
-          <div key={cat.key} className={`rounded-xl border p-4 ${cat.color}`}>
-            <p className="text-xs font-semibold mb-2">{cat.label} ({byCategory[cat.key]?.length || 0})</p>
-            <p className="text-xs leading-relaxed opacity-70 break-words">
+          <Card variant="secondary" key={cat.key} className={`p-4 `}>
+            <p className="text-xs font-semibold">{cat.label} ({byCategory[cat.key]?.length || 0})</p>
+            <p className="text-xs leading-relaxed opacity-70 ">
               {byCategory[cat.key]?.length > 0
                 ? byCategory[cat.key].join(", ")
                 : "None"}
             </p>
-          </div>
+          </Card>
         ))}
       </div>
 
-      {/* Image buttons */}
-      <div className="flex gap-3 mb-5">
-        <Button onPress={() => setShowOriginal(v => !v)} variant="outline" size="sm">
-          {showOriginal ? "Hide" : "View"} Original OMR
-        </Button>
-        <Button onPress={() => setShowProcessed(v => !v)} variant="outline" size="sm">
-          {showProcessed ? "Hide" : "View"} Detection Preview
-        </Button>
+     {/* Image Previews — Disclosure panels */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-5">
+        {/* Original OMR */}
+        <Disclosure>
+          <Disclosure.Heading>
+            <Button slot="trigger" variant="secondary" fullWidth>
+              <span className="flex items-center gap-2">
+                <ImageIcon size={16} className="text-primary" />
+                Original OMR Sheet
+              </span>
+              <Disclosure.Indicator />
+            </Button>
+          </Disclosure.Heading>
+          <Disclosure.Content>
+            <Disclosure.Body className="mt-2 rounded-xl border border-default-200 bg-white p-3">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={`${getOriginalImageUrl(evalId)}?t=${Date.now()}`}
+                alt="Original OMR"
+                className="w-full rounded-lg border border-default-200 object-contain max-h-96 cursor-zoom-in hover:opacity-90 transition-opacity"
+                onClick={() => setLightboxSrc(`${getOriginalImageUrl(evalId)}?t=${Date.now()}`)}
+              />
+              <p className="text-xs text-default-400 mt-2 text-center">Click image to view fullscreen</p>
+            </Disclosure.Body>
+          </Disclosure.Content>
+        </Disclosure>
+
+        {/* Detection Preview */}
+        <Disclosure>
+          <Disclosure.Heading>
+            <Button slot="trigger" variant="secondary" fullWidth>
+              <span className="flex items-center gap-2">
+                <ImageIcon size={16} className="text-success" />
+                Detection Preview
+              </span>
+              <Disclosure.Indicator />
+            </Button>
+          </Disclosure.Heading>
+          <Disclosure.Content>
+            <Disclosure.Body className="mt-2 rounded-xl border border-default-200 bg-white p-3">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={`${getProcessedImageUrl(evalId)}?t=${Date.now()}`}
+                alt="Detection Preview"
+                className="w-full rounded-lg border border-default-200 object-contain max-h-96 cursor-zoom-in hover:opacity-90 transition-opacity"
+                onClick={() => setLightboxSrc(`${getProcessedImageUrl(evalId)}?t=${Date.now()}`)}
+              />
+              <p className="text-xs text-default-400 mt-2 text-center">Click image to view fullscreen</p>
+            </Disclosure.Body>
+          </Disclosure.Content>
+        </Disclosure>
       </div>
 
-      {(showOriginal || showProcessed) && (
-        <div className="flex gap-4 mb-5 flex-wrap">
-          {showOriginal && (
-            <Card  className="flex-1 min-w-64 border border-default-200">
-              <Card.Content className="p-4">
-                <p className="text-sm font-medium text-foreground mb-3">Original OMR Image</p>
-                <img src={`${getOriginalImageUrl(evalId)}?t=${Date.now()}`} alt="Original OMR" className="w-full rounded-lg border border-default-200 object-contain max-h-96" />
-              </Card.Content>
-            </Card>
-          )}
-          {showProcessed && (
-            <Card  className="flex-1 min-w-64 border border-default-200">
-              <Card.Content className="p-4">
-                <p className="text-sm font-medium text-foreground mb-3">Detection Overlay</p>
-                <img src={`${getProcessedImageUrl(evalId)}?t=${Date.now()}`} alt="Processed OMR" className="w-full rounded-lg border border-default-200 object-contain max-h-96" />
-              </Card.Content>
-            </Card>
-          )}
-        </div>
+      {/* Fullscreen Lightbox */}
+      {lightboxSrc && (
+        <ImageLightbox
+          src={lightboxSrc}
+          alt="OMR Preview"
+          onClose={() => setLightboxSrc(null)}
+        />
       )}
 
-      {/* Question Table */}
-      <Card  className="border border-default-200 overflow-hidden">
-        <Card.Content className="p-0">
-          <div className="flex items-center justify-between px-5 py-4 border-b border-default-200">
-            <h2 className="font-semibold text-foreground">Question-wise Result</h2>
-            <div className="flex gap-2 flex-wrap">
-              {FILTERS.map(f => (
-                <Button key={f} onPress={() => setFilter(f)} size="sm"
-                  variant={filter === f ? "primary" : "secondary"}>
-                  {f} ({f === "ALL" ? answers.length : answers.filter(a => a.result_type === f).length})
-                </Button>
-              ))}
-            </div>
-          </div>
+     {/* Question Table */}
+  <Card  className="w-full border overflow-hidden">
+  {/* Header / Filters */}
+  <div className="flex items-center justify-between gap-4 px-4">
+  <h2 className="w-full font-semibold text-foreground">
+    Question-wise Result
+  </h2>
 
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse text-sm">
-              <thead>
-                <tr className="border-b border-default-200 bg-default-50">
-                  <th className="text-left py-2 px-3 text-xs font-semibold text-default-400 uppercase tracking-wider">Q#</th>
-                  <th className="text-left py-2 px-3 text-xs font-semibold text-default-400 uppercase tracking-wider">Detected</th>
-                  <th className="text-left py-2 px-3 text-xs font-semibold text-default-400 uppercase tracking-wider">Correct</th>
-                  <th className="text-left py-2 px-3 text-xs font-semibold text-default-400 uppercase tracking-wider">Final</th>
-                  <th className="text-left py-2 px-3 text-xs font-semibold text-default-400 uppercase tracking-wider">Result</th>
-                  <th className="text-left py-2 px-3 text-xs font-semibold text-default-400 uppercase tracking-wider">Marks</th>
-                  <th className="text-left py-2 px-3 text-xs font-semibold text-default-400 uppercase tracking-wider">Confidence</th>
-                  <th className="text-left py-2 px-3 text-xs font-semibold text-default-400 uppercase tracking-wider">Method</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredAnswers.map(ans => (
-                  <tr key={ans.question_number} className="border-b border-default-100 hover:bg-default-50 transition-colors">
-                    <td className="py-2.5 px-3 font-mono font-semibold text-default-600">{ans.question_number}</td>
-                    <td className="py-2.5 px-3 text-default-500">{ans.detected_answer || "—"}</td>
-                    <td className="py-2.5 px-3 font-bold text-success">{ans.correct_answer || "—"}</td>
-                    <td className="py-2.5 px-3 font-bold text-foreground">{ans.final_answer || ans.detected_answer || "—"}</td>
-                    <td className="py-2.5 px-3">
-                      {ans.result_type && RESULT_CHIP[ans.result_type] && (
-                        <Chip size="sm" color={RESULT_CHIP[ans.result_type].color} variant="soft">
-                          {RESULT_CHIP[ans.result_type].label}
-                        </Chip>
-                      )}
-                    </td>
-                    <td className={`py-2.5 px-3 font-semibold text-sm ${(ans.marks || 0) > 0 ? "text-success" : (ans.marks || 0) < 0 ? "text-danger" : "text-default-400"}`}>
-                      {ans.marks !== null ? (ans.marks > 0 ? "+" : "") + (ans.marks ?? 0).toFixed(2) : "—"}
-                    </td>
-                    <td className="py-2.5 px-3">
-                      <div className="flex items-center gap-2">
-                        <div className="w-12 h-1.5 rounded-full bg-default-200">
-                          <div
-                            className={`h-full rounded-full transition-all ${(ans.confidence || 0) >= 0.8 ? "bg-success" : (ans.confidence || 0) >= 0.5 ? "bg-warning" : "bg-danger"}`}
-                            style={{ width: `${(ans.confidence || 0) * 100}%` }}
-                          />
-                        </div>
-                        <span className="text-xs text-default-400">{((ans.confidence || 0) * 100).toFixed(0)}%</span>
-                      </div>
-                    </td>
-                    <td className="py-2.5 px-3">
-                      <span className={`text-xs ${ans.detection_method === "MANUAL" ? "text-primary font-medium" : "text-default-400"}`}>
-                        {ans.detection_method || "AUTO"}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            {filteredAnswers.length === 0 && (
-              <div className="text-center py-8 text-default-400 text-sm">No questions in this category</div>
-            )}
-          </div>
-        </Card.Content>
-      </Card>
-    </div>
+  <Tabs
+  selectedKey={filter}
+  onSelectionChange={(key) => setFilter(String(key))}
+  className="w-full"
+>
+  <Tabs.ListContainer className="w-full">
+    <Tabs.List
+      aria-label="Question result filters"
+      className="w-full"
+    >
+      {FILTERS.map((f) => (
+        <Tabs.Tab
+          key={f}
+          id={f}
+          className="whitespace-nowrap"
+        >
+          {f} (
+          {f === "ALL"
+            ? answers.length
+            : answers.filter((a) => a.result_type === f).length}
+          )
+          <Tabs.Indicator />
+        </Tabs.Tab>
+      ))}
+    </Tabs.List>
+  </Tabs.ListContainer>
+</Tabs>
+</div>
+  {/* Table */}
+  <Table>
+    <Table.ScrollContainer>
+      <Table.Content
+        aria-label="Question-wise result"
+        className="min-w-[900px]"
+      >
+        <Table.Header>
+          <Table.Column isRowHeader id="question">
+            Q#
+          </Table.Column>
+
+          <Table.Column id="detected">
+            Detected
+          </Table.Column>
+
+          <Table.Column id="correct">
+            Correct
+          </Table.Column>
+
+          <Table.Column id="final">
+            Final
+          </Table.Column>
+
+          <Table.Column id="result">
+            Result
+          </Table.Column>
+
+          <Table.Column id="marks">
+            Marks
+          </Table.Column>
+
+          <Table.Column id="confidence">
+            Confidence
+          </Table.Column>
+
+          <Table.Column id="method">
+            Method
+          </Table.Column>
+        </Table.Header>
+
+        <Table.Body>
+          {filteredAnswers.map((ans) => (
+            <Table.Row key={ans.question_number} id={ans.question_number}>
+              {/* Q# */}
+              <Table.Cell className="font-mono font-semibold text-default-600">
+                {ans.question_number}
+              </Table.Cell>
+
+              {/* Detected */}
+              <Table.Cell className="text-default-500">
+                {ans.detected_answer || "—"}
+              </Table.Cell>
+
+              {/* Correct */}
+              <Table.Cell className="font-bold text-success">
+                {ans.correct_answer || "—"}
+              </Table.Cell>
+
+              {/* Final */}
+              <Table.Cell className="font-bold text-foreground">
+                {ans.final_answer ||
+                  ans.detected_answer ||
+                  "—"}
+              </Table.Cell>
+
+              {/* Result */}
+              <Table.Cell>
+                {ans.result_type &&
+                  RESULT_CHIP[ans.result_type] && (
+                    <Chip
+                      size="sm"
+                      color={RESULT_CHIP[ans.result_type].color}
+                      variant="soft"
+                    >
+                      {RESULT_CHIP[ans.result_type].label}
+                    </Chip>
+                  )}
+              </Table.Cell>
+
+              {/* Marks */}
+              <Table.Cell>
+                <span
+                  className={`font-semibold ${
+                    (ans.marks || 0) > 0
+                      ? "text-success"
+                      : (ans.marks || 0) < 0
+                        ? "text-danger"
+                        : "text-default-400"
+                  }`}
+                >
+                  {ans.marks !== null
+                    ? `${ans.marks > 0 ? "+" : ""}${(
+                        ans.marks ?? 0
+                      ).toFixed(2)}`
+                    : "—"}
+                </span>
+              </Table.Cell>
+
+              {/* Confidence */}
+              <Table.Cell>
+                <div className="flex min-w-[110px] items-center gap-2">
+                  <div className="h-1.5 w-12 overflow-hidden rounded-full bg-default-200">
+                    <div
+                      className={`h-full rounded-full transition-all ${
+                        (ans.confidence || 0) >= 0.8
+                          ? "bg-success"
+                          : (ans.confidence || 0) >= 0.5
+                            ? "bg-warning"
+                            : "bg-danger"
+                      }`}
+                      style={{
+                        width: `${(ans.confidence || 0) * 100}%`,
+                      }}
+                    />
+                  </div>
+
+                  <span className="text-xs text-default-400">
+                    {((ans.confidence || 0) * 100).toFixed(0)}%
+                  </span>
+                </div>
+              </Table.Cell>
+
+              {/* Method */}
+              <Table.Cell>
+                <span
+                  className={`text-xs ${
+                    ans.detection_method === "MANUAL"
+                      ? "font-medium text-primary"
+                      : "text-default-400"
+                  }`}
+                >
+                  {ans.detection_method || "AUTO"}
+                </span>
+              </Table.Cell>
+            </Table.Row>
+          ))}
+
+        </Table.Body>
+      </Table.Content>
+    </Table.ScrollContainer>
+
+    {/* Empty state */}
+    {filteredAnswers.length === 0 && (
+      <div className="border-t border-default-200 py-8 text-center text-sm text-default-400">
+        No questions in this category
+      </div>
+    )}
+  </Table>
+  </Card>
+</div>
   );
 }

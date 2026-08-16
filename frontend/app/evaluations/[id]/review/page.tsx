@@ -2,10 +2,11 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { Card, Button, Chip, Separator, Select, ListBox } from "@heroui/react";
-import { AlertTriangle, ArrowLeft, ChevronRight, Save } from "lucide-react";
-import { fetchEvaluation, applyCorrections, finalizeEvaluation } from "@/lib/api";
+import { Card, Button, Chip, Separator, Select, ListBox, Disclosure } from "@heroui/react";
+import { AlertTriangle, ArrowLeft, ChevronRight, Save, Image as ImageIcon, ChevronDown } from "lucide-react";
+import { fetchEvaluation, applyCorrections, finalizeEvaluation, getOriginalImageUrl, getProcessedImageUrl } from "@/lib/api";
 import type { Evaluation, EvaluationAnswer } from "@/types";
+import ImageLightbox from "@/components/ImageLightbox";
 
 const RESULT_CHIP: Record<string, { color: "success" | "danger" | "warning" | "default"; label: string }> = {
   CORRECT: { color: "success", label: "CORRECT" },
@@ -28,6 +29,7 @@ export default function ReviewPage() {
   const [corrections, setCorrections] = useState<Record<number, string>>({});
   const [finalizing, setFinalizing] = useState(false);
   const [error, setError] = useState("");
+  const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
 
   useEffect(() => {
     fetchEvaluation(evalId).then(ev => { setEvaluation(ev); setLoading(false); }).catch(() => setLoading(false));
@@ -125,7 +127,67 @@ export default function ReviewPage() {
         </div>
       )}
 
+      {/* Image Previews — Disclosure panels */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-5">
+        {/* Original OMR */}
+        <Disclosure>
+          <Disclosure.Heading>
+            <Button slot="trigger" variant="secondary" fullWidth>
+              <span className="flex items-center gap-2">
+                <ImageIcon size={16} className="text-primary" />
+                Original OMR Sheet
+              </span>
+              <Disclosure.Indicator />
+            </Button>
+          </Disclosure.Heading>
+          <Disclosure.Content>
+            <Disclosure.Body className="mt-2 rounded-xl border border-default-200 bg-white p-3">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={`${getOriginalImageUrl(evalId)}?t=${Date.now()}`}
+                alt="Original OMR"
+                className="w-full rounded-lg border border-default-200 object-contain max-h-96 cursor-zoom-in hover:opacity-90 transition-opacity"
+                onClick={() => setLightboxSrc(`${getOriginalImageUrl(evalId)}?t=${Date.now()}`)}
+              />
+              <p className="text-xs text-default-400 mt-2 text-center">Click image to view fullscreen</p>
+            </Disclosure.Body>
+          </Disclosure.Content>
+        </Disclosure>
 
+        {/* Detection Preview */}
+        <Disclosure>
+          <Disclosure.Heading>
+            <Button slot="trigger" variant="secondary" fullWidth>
+              <span className="flex items-center gap-2">
+                <ImageIcon size={16} className="text-success" />
+                Detection Preview
+              </span>
+              <Disclosure.Indicator />
+            </Button>
+          </Disclosure.Heading>
+          <Disclosure.Content>
+            <Disclosure.Body className="mt-2 rounded-xl border border-default-200 bg-white p-3">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={`${getProcessedImageUrl(evalId)}?t=${Date.now()}`}
+                alt="Detection Preview"
+                className="w-full rounded-lg border border-default-200 object-contain max-h-96 cursor-zoom-in hover:opacity-90 transition-opacity"
+                onClick={() => setLightboxSrc(`${getProcessedImageUrl(evalId)}?t=${Date.now()}`)}
+              />
+              <p className="text-xs text-default-400 mt-2 text-center">Click image to view fullscreen</p>
+            </Disclosure.Body>
+          </Disclosure.Content>
+        </Disclosure>
+      </div>
+
+      {/* Fullscreen Lightbox */}
+      {lightboxSrc && (
+        <ImageLightbox
+          src={lightboxSrc}
+          alt="OMR Preview"
+          onClose={() => setLightboxSrc(null)}
+        />
+      )}
 
       {/* Filters */}
       <div className="flex gap-2 mb-4 flex-wrap">

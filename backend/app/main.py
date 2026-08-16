@@ -81,6 +81,15 @@ def health_check():
     }
 
 
+# pyrefly: ignore [missing-import]
+from pydantic import BaseModel
+import os
+
+class SettingsUpdate(BaseModel):
+    fill_threshold: float
+    confidence_threshold: float
+    ambiguity_margin: float
+
 @app.get("/api/settings")
 def get_settings():
     """Return current OMR processing settings."""
@@ -91,6 +100,47 @@ def get_settings():
         "page_width": settings.OMR_PAGE_WIDTH,
         "page_height": settings.OMR_PAGE_HEIGHT,
     }
+
+@app.post("/api/settings")
+def update_settings(update: SettingsUpdate):
+    """Update OMR processing settings and save to .env."""
+    settings.OMR_FILL_THRESHOLD = update.fill_threshold
+    settings.OMR_CONFIDENCE_THRESHOLD = update.confidence_threshold
+    settings.OMR_AMBIGUITY_MARGIN = update.ambiguity_margin
+
+    env_path = settings.BASE_DIR / ".env"
+    
+    # Read existing or create new .env content
+    lines = []
+    if env_path.exists():
+        with open(env_path, "r", encoding="utf-8") as f:
+            lines = f.readlines()
+            
+    # Update lines
+    new_lines = []
+    keys_updated = {"OMR_FILL_THRESHOLD": False, "OMR_CONFIDENCE_THRESHOLD": False, "OMR_AMBIGUITY_MARGIN": False}
+    
+    for line in lines:
+        updated = False
+        for key in keys_updated.keys():
+            if line.startswith(f"{key}="):
+                new_lines.append(f"{key}={getattr(settings, key)}\n")
+                keys_updated[key] = True
+                updated = True
+                break
+        if not updated:
+            new_lines.append(line)
+            
+    # Append any keys that weren't in the file
+    for key, updated in keys_updated.items():
+        if not updated:
+            new_lines.append(f"{key}={getattr(settings, key)}\n")
+            
+    # Write back
+    with open(env_path, "w", encoding="utf-8") as f:
+        f.writelines(new_lines)
+
+    return {"status": "success"}
 
 
 @app.get("/scan/{code}", response_class=HTMLResponse)

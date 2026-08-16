@@ -86,6 +86,20 @@ async def evaluate_omr(
     with open(original_path, "wb") as f:
         shutil.copyfileobj(file.file, f)
 
+    # Convert PDF to JPG so frontend can display it in an <img> tag
+    if original_ext.lower() == ".pdf":
+        try:
+            from app.services.omr.preprocessing import load_image
+            import cv2
+            img = load_image(str(original_path))
+            original_ext = ".jpg"
+            new_original_path = eval_dir / f"original{original_ext}"
+            cv2.imwrite(str(new_original_path), img)
+            os.remove(original_path)
+            original_path = new_original_path
+        except Exception as e:
+            print(f"Failed to convert PDF to JPG: {e}")
+
     # 3. Load template
     template = ensure_default_template(settings.TEMPLATES_DIR)
 

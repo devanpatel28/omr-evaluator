@@ -2,7 +2,9 @@
 Image preprocessing pipeline for OMR sheets.
 Normalizes image quality before sheet detection and bubble reading.
 """
+# pyrefly: ignore [missing-import]
 import cv2
+# pyrefly: ignore [missing-import]
 import numpy as np
 from typing import Tuple
 

@@ -3,10 +3,11 @@ import { useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { Card, Button } from "@heroui/react";
-import { ImagePlus, Lightbulb, ChevronRight, Check, X, Circle, Loader, Camera } from "lucide-react";
+import { ImagePlus, Lightbulb, ChevronRight, Check, X, Circle, Loader } from "lucide-react";
 import { evaluateOMR } from "@/lib/api";
 import type { ProcessingStep } from "@/types";
 import CameraScanModal from "@/components/CameraScanModal";
+import { Camera } from "reicon-react";
 
 const STEP_LABELS = [
   "Image loaded",
@@ -118,13 +119,13 @@ export default function EvaluatePage() {
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-semibold text-foreground">Upload OMR Sheet</h2>
             <Button
-              variant="outline"
+              variant="primary"
               size="sm"
               onPress={() => setShowScanModal(true)}
               isDisabled={processing}
-              className="gap-1.5 text-primary border-primary-200 hover:bg-primary-50"
+              className="gap-2"
             >
-              <Camera size={14} />
+              <Camera weight="Filled" size={24} />
               Scan by Cam
             </Button>
           </div>
