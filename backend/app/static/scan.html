@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>OMR Scan — Code __SCAN_CODE__</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #f8f9ff; color: #1e1b4b;
+    min-height: 100dvh; display: flex; flex-direction: column; overflow: hidden;
+  }
+  .header {
+    background: #fff; border-bottom: 1px solid #e8e8f0; padding: 14px 20px;
+    display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+    box-shadow: 0 1px 4px rgba(108,99,255,.07);
+  }
+  .header-title { font-size: 16px; font-weight: 700; color: #1e1b4b; }
+  .code-badge {
+    font-size: 13px; font-weight: 800; letter-spacing: 4px; color: #6c63ff;
+    background: #eeecff; border: 1.5px solid #c4bfff; border-radius: 8px; padding: 4px 10px;
+  }
+  .screen { flex: 1; display: none; flex-direction: column; overflow-y: auto; }
+  .screen.active { display: flex; }
+
+  /* Home */
+  #screen-home {
+    align-items: center; justify-content: center;
+    gap: 22px; padding: 32px 24px; text-align: center;
+  }
+  .cam-icon-wrap {
+    width: 88px; height: 88px; border-radius: 28px;
+    background: linear-gradient(135deg,#6c63ff,#8b85ff);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 8px 32px rgba(108,99,255,.35);
+  }
+  .home-title { font-size: 22px; font-weight: 800; }
+  .home-sub { font-size: 14px; color: #6b6b8a; line-height: 1.55; max-width: 280px; }
+  #file-input { display: none; }
+  .open-cam-btn {
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    background: linear-gradient(135deg,#6c63ff,#8b85ff); color: #fff;
+    border: none; border-radius: 16px; padding: 16px 32px;
+    font-size: 17px; font-weight: 700; cursor: pointer;
+    width: 100%; max-width: 300px;
+    box-shadow: 0 4px 20px rgba(108,99,255,.35);
+    transition: opacity .15s, transform .1s;
+  }
+  .open-cam-btn:active { opacity:.88; transform:scale(.97); }
+  .tip-box {
+    background: #fff; border: 1px solid #e8e8f0; border-radius: 14px;
+    padding: 14px 16px; max-width: 300px; width: 100%; text-align: left;
+  }
+  .tip-box p { font-size: 12px; color: #8888aa; line-height: 1.7; }
+  .tip-box strong { color: #6c63ff; }
+
+  /* Preview */
+  #screen-preview { align-items: center; padding: 16px; gap: 14px; }
+  .preview-label { font-size: 13px; color: #6b6b8a; text-align: center; }
+  #preview-img {
+    max-width: 100%; max-height: calc(100dvh - 260px);
+    border-radius: 12px; border: 2px solid #e0dfff;
+    object-fit: contain; background: #fff;
+    box-shadow: 0 2px 16px rgba(108,99,255,.1);
+  }
+  .preview-actions { display: flex; gap: 12px; width: 100%; max-width: 380px; }
+  .btn {
+    flex: 1; padding: 14px; border-radius: 14px; border: none;
+    font-size: 15px; font-weight: 600; cursor: pointer;
+    transition: opacity .15s, transform .1s;
+  }
+  .btn:active { transform: scale(.97); }
+  .btn-primary { background: linear-gradient(135deg,#6c63ff,#8b85ff); color: #fff; box-shadow: 0 3px 14px rgba(108,99,255,.3); }
+  .btn-secondary { background: #f0f0ff; color: #6c63ff; border: 1.5px solid #c4bfff; }
+
+  /* Processing overlay */
+  .proc-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(248,249,255,.88); backdrop-filter: blur(6px);
+    z-index: 100; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+  }
+  .proc-overlay.visible { display: flex; }
+  .spinner {
+    width: 52px; height: 52px; border: 4px solid #d4d1ff;
+    border-top-color: #6c63ff; border-radius: 50%; animation: spin .8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .proc-label { color: #6b6b8a; font-size: 14px; font-weight: 500; }
+  .proc-sub { color: #aaaacc; font-size: 12px; }
+
+  /* Success */
+  #screen-success {
+    align-items: center; justify-content: center;
+    gap: 18px; padding: 40px 24px; text-align: center;
+  }
+  .success-icon {
+    width: 80px; height: 80px; border-radius: 50%;
+    background: #dcfce7; border: 2px solid #86efac;
+    display: flex; align-items: center; justify-content: center;
+    animation: pop .4s cubic-bezier(.34,1.56,.64,1) both;
+  }
+  @keyframes pop { from{transform:scale(0);opacity:0} to{transform:scale(1);opacity:1} }
+  .success-title { font-size: 22px; font-weight: 800; }
+  .success-sub { font-size: 14px; color: #6b6b8a; line-height: 1.5; }
+  .dot-pulse { display: flex; gap: 5px; }
+  .dot-pulse span {
+    width: 7px; height: 7px; background: #6c63ff; border-radius: 50%;
+    display: inline-block; animation: dpulse 1.2s ease-in-out infinite;
+  }
+  .dot-pulse span:nth-child(2){animation-delay:.2s}
+  .dot-pulse span:nth-child(3){animation-delay:.4s}
+  @keyframes dpulse{0%,100%{opacity:.3;transform:scale(.7)}50%{opacity:1;transform:scale(1)}}
+
+  /* Error */
+  .error-banner {
+    display: none; background: #fef2f2; border: 1px solid #fca5a5;
+    border-radius: 12px; padding: 10px 14px; font-size: 13px;
+    color: #dc2626; margin: 8px 16px;
+  }
+  .error-banner.visible { display: block; }
+  canvas { display: none; }
+</style>
+</head>
+<body>
+<canvas id="canvas-work"></canvas>
+
+<div class="header">
+  <span class="header-title">📷 OMR Scan</span>
+  <span class="code-badge">__SCAN_CODE__</span>
+</div>
+<div class="error-banner" id="error-banner"></div>
+
+<!-- Home -->
+<div class="screen active" id="screen-home">
+  <div class="cam-icon-wrap">
+    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="44" height="44">
+      <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+      <circle cx="12" cy="13" r="4"/>
+    </svg>
+  </div>
+  <h1 class="home-title">Scan OMR Sheet</h1>
+  <p class="home-sub">Tap below to photograph the OMR sheet. Place it flat on a dark surface for best results.</p>
+  <input type="file" id="file-input" accept="image/*" capture="environment" />
+  <button class="open-cam-btn" onclick="document.getElementById('file-input').click()">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+      <circle cx="12" cy="13" r="4"/>
+    </svg>
+    Open Camera
+  </button>
+  <div class="tip-box">
+    <p>
+      <strong>For best results:</strong><br>
+      • All 4 corner black squares must be visible<br>
+      • Sheet flat on a dark surface<br>
+      • Even lighting, avoid strong shadows<br>
+      • Camera directly above and parallel to sheet
+    </p>
+  </div>
+</div>
+
+<!-- Preview -->
+<div class="screen" id="screen-preview">
+  <p class="preview-label" style="margin-top:6px">
+    Auto-corrected preview — tap <strong>Send to PC</strong> to continue
+  </p>
+  <img id="preview-img" alt="OMR preview" />
+  <div class="preview-actions">
+    <button class="btn btn-secondary" onclick="retake()">↩ Retake</button>
+    <button class="btn btn-primary" onclick="confirmAndSend()">Send to PC ✓</button>
+  </div>
+</div>
+
+<!-- Success -->
+<div class="screen" id="screen-success">
+  <div class="success-icon">
+    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="20 6 9 17 4 12"/>
+    </svg>
+  </div>
+  <div class="success-title">Sent! ✓</div>
+  <div class="success-sub">OMR sheet sent to PC.<br>Continue on the OMR Evaluator app.</div>
+  <div style="display:flex;align-items:center;gap:10px;background:#f0f0ff;border:1px solid #c4bfff;border-radius:12px;padding:12px 18px;">
+    <div class="dot-pulse"><span></span><span></span><span></span></div>
+    <span style="font-size:13px;color:#6b6b8a">Processing on PC…</span>
+  </div>
+</div>
+
+<!-- Processing overlay -->
+<div class="proc-overlay" id="proc-overlay">
+  <div class="spinner"></div>
+  <p class="proc-label" id="proc-label">Processing…</p>
+  <p class="proc-sub" id="proc-sub"></p>
+</div>
+
+<script>
+const SCAN_CODE = '__SCAN_CODE__';
+const BACKEND   = '__BACKEND_ORIGIN__';
+
+let capturedBlob = null;
+
+// ─── UI helpers ──────────────────────────────────────────────────────────────
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen-'+id).classList.add('active');
+}
+function showError(msg){
+  const b=document.getElementById('error-banner');
+  b.textContent='⚠ '+msg; b.classList.add('visible');
+  setTimeout(()=>b.classList.remove('visible'),7000);
+}
+function setProc(visible,label='',sub=''){
+  document.getElementById('proc-label').textContent=label;
+  document.getElementById('proc-sub').textContent=sub;
+  document.getElementById('proc-overlay').classList.toggle('visible',visible);
+}
+
+// ─── File picker ─────────────────────────────────────────────────────────────
+document.getElementById('file-input').addEventListener('change',function(e){
+  const file=e.target.files&&e.target.files[0]; if(!file)return;
+  this.value='';
+  setProc(true,'Loading image…','');
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    const img=new Image();
+    img.onload=()=>{ setTimeout(()=>runPipeline(img),50); };
+    img.src=ev.target.result;
+  };
+  reader.readAsDataURL(file);
+});
+
+// ─── Main pipeline ───────────────────────────────────────────────────────────
+async function runPipeline(img){
+  try {
+    setProc(true,'Detecting corner marks…','Looking for the 4 fiducial squares');
+    await delay(30);
+
+    // 1. Draw to work canvas (scale down if too large for performance)
+    const MAX=2400;
+    const scale=Math.min(1, MAX/Math.max(img.width,img.height));
+    const W=Math.round(img.width*scale), H=Math.round(img.height*scale);
+    const cw=document.getElementById('canvas-work');
+    cw.width=W; cw.height=H;
+    const ctx=cw.getContext('2d',{willReadFrequently:true});
+    ctx.drawImage(img,0,0,W,H);
+
+    // 2. Build grayscale
+    const raw=ctx.getImageData(0,0,W,H);
+    const gray=toGray(raw.data,W,H);
+
+    // 3. Find fiducial corner squares
+    setProc(true,'Detecting corner marks…','Scanning quadrants for corner squares');
+    await delay(30);
+    const corners=detectFiducials(gray,W,H);
+    console.log('Corners:',corners);
+
+    // 4. Perspective-correct warp
+    setProc(true,'Correcting perspective…','Applying homography transform');
+    await delay(30);
+    const {canvas:warped, dstW, dstH}=perspectiveCorrect(ctx,W,H,corners);
+
+    // 5. Document-scan binarisation (adaptive threshold → pure B&W)
+    setProc(true,'Applying document scan…','Adaptive threshold + binarisation');
+    await delay(30);
+    const scanCanvas=documentScan(warped,dstW,dstH);
+
+    // 6. Show preview
+    capturedBlob=null;
+    scanCanvas.toBlob(b=>{capturedBlob=b;},'image/jpeg',0.95);
+    const preview=document.getElementById('preview-img');
+    preview.src=scanCanvas.toDataURL('image/jpeg',0.95);
+    setProc(false);
+    showScreen('preview');
+  } catch(err){
+    setProc(false);
+    console.error(err);
+    showError('Processing failed: '+err.message+' — try again with better lighting.');
+    showScreen('home');
+  }
+}
+
+function delay(ms){return new Promise(r=>setTimeout(r,ms));}
+
+// ─── Step 1: Grayscale ───────────────────────────────────────────────────────
+function toGray(data,W,H){
+  const g=new Uint8Array(W*H);
+  for(let i=0;i<W*H;i++)
+    g[i]=Math.round(0.299*data[i*4]+0.587*data[i*4+1]+0.114*data[i*4+2]);
+  return g;
+}
+
+// ─── Step 2: Detect fiducial corner squares ──────────────────────────────────
+// Each OMR has a solid BLACK SQUARE at each corner.
+// We look in each corner quadrant for the large solid dark region
+// and return the OUTER corner of that square (the corner closest to the image edge).
+function detectFiducials(gray,W,H){
+  // Otsu threshold for clean binary — works better for finding squares
+  const thresh=otsuThreshold(gray,W,H);
+  const bin=new Uint8Array(W*H);
+  for(let i=0;i<W*H;i++) bin[i]=gray[i]<thresh?1:0;
+
+  // How much of the image to search in each corner (30%)
+  const qW=Math.floor(W*0.30), qH=Math.floor(H*0.30);
+
+  // For each corner: find the tightest bbox of the fiducial square
+  // The fiducial is the DENSEST dark blob very close to the corner,
+  // so we shrink the search area to the outermost strip (12%)
+  const stripW=Math.floor(W*0.12), stripH=Math.floor(H*0.12);
+
+  function findSquareInStrip(x0,y0,x1,y1){
+    // Find bbox of dark pixels in this strip
+    let mnX=x1,mxX=x0,mnY=y1,mxY=y0,cnt=0;
+    for(let y=y0;y<y1;y++)for(let x=x0;x<x1;x++){
+      if(bin[y*W+x]){mnX=Math.min(mnX,x);mxX=Math.max(mxX,x);mnY=Math.min(mnY,y);mxY=Math.max(mxY,y);cnt++;}
+    }
+    if(cnt<20) return null;
+    return {mnX,mxX,mnY,mxY,cx:(mnX+mxX)/2,cy:(mnY+mxY)/2};
+  }
+
+  // Outer corner (the point on the fiducial square closest to the image boundary)
+  function outerCorner(bb,isRight,isBottom){
+    if(!bb) return null;
+    return {
+      x: isRight ? bb.mxX : bb.mnX,
+      y: isBottom? bb.mxY : bb.mnY,
+    };
+  }
+
+  // We search in a strip near each corner (not the whole quadrant) 
+  // to avoid picking up filled bubbles or text that's further in
+  const tlBB=findSquareInStrip(0,        0,        stripW,    stripH);
+  const trBB=findSquareInStrip(W-stripW, 0,        W,         stripH);
+  const blBB=findSquareInStrip(0,        H-stripH, stripW,    H);
+  const brBB=findSquareInStrip(W-stripW, H-stripH, W,         H);
+
+  // If strip search failed, fall back to wider quadrant search
+  function fallback(x0,y0,x1,y1){
+    return findSquareInStrip(x0,y0,x1,y1);
+  }
+  const tl=outerCorner(tlBB||fallback(0,0,qW,qH),          false,false)||{x:0,    y:0};
+  const tr=outerCorner(trBB||fallback(W-qW,0,W,qH),        true, false)||{x:W-1,  y:0};
+  const bl=outerCorner(blBB||fallback(0,H-qH,qW,H),        false,true) ||{x:0,    y:H-1};
+  const br=outerCorner(brBB||fallback(W-qW,H-qH,W,H),      true, true) ||{x:W-1,  y:H-1};
+
+  return [tl,tr,bl,br]; // TL,TR,BL,BR outer corners
+}
+
+// Otsu's global threshold — finds the best split between paper and marks
+function otsuThreshold(gray,W,H){
+  const hist=new Int32Array(256);
+  for(let i=0;i<W*H;i++) hist[gray[i]]++;
+  const total=W*H;
+  let sum=0;for(let i=0;i<256;i++)sum+=i*hist[i];
+  let sumB=0,wB=0,wF=0,varMax=0,thresh=128;
+  for(let t=0;t<256;t++){
+    wB+=hist[t]; if(!wB)continue;
+    wF=total-wB; if(!wF)break;
+    sumB+=t*hist[t];
+    const mB=sumB/wB, mF=(sum-sumB)/wF;
+    const between=wB*wF*(mB-mF)*(mB-mF);
+    if(between>varMax){varMax=between;thresh=t;}
+  }
+  return thresh;
+}
+
+// ─── Step 3: Perspective correction ─────────────────────────────────────────
+// Maps detected outer corners of fiducials → corners of output canvas.
+// Output dimensions are computed from the apparent physical size of the sheet
+// so there is NO stretching.
+function perspectiveCorrect(srcCtx,srcW,srcH,corners){
+  const [tl,tr,bl,br]=corners;
+
+  // Fixed OMR dimensions (A4 aspect ratio) to stretch to
+  const outW = 1000;
+  const outH = 1400;
+
+  const pad = 24; // Padding to ensure corners are fully visible
+  const dstCorners=[
+    {x:pad,        y:pad},
+    {x:outW-pad,   y:pad},
+    {x:pad,        y:outH-pad},
+    {x:outW-pad,   y:outH-pad},
+  ];
+
+  // Homography from dst→src (so we can sample src for each dst pixel)
+  const H=computeHomography(
+    dstCorners[0],dstCorners[1],dstCorners[2],dstCorners[3],
+    tl,tr,bl,br
+  );
+
+  const srcData=srcCtx.getImageData(0,0,srcW,srcH);
+  const dst=document.createElement('canvas');
+  dst.width=outW; dst.height=outH;
+  const dstCtx=dst.getContext('2d',{willReadFrequently:true});
+  const dstImg=dstCtx.createImageData(outW,outH);
+  const sd=srcData.data, dd=dstImg.data;
+
+  for(let dy=0;dy<outH;dy++){
+    for(let dx=0;dx<outW;dx++){
+      const[sx,sy]=applyH(H,dx,dy);
+      const di=(dy*outW+dx)*4;
+      const ux=Math.round(sx),uy=Math.round(sy);
+      if(ux>=0&&ux<srcW&&uy>=0&&uy<srcH){
+        const si=(uy*srcW+ux)*4;
+        dd[di]=sd[si];dd[di+1]=sd[si+1];dd[di+2]=sd[si+2];dd[di+3]=255;
+      } else {
+        dd[di]=dd[di+1]=dd[di+2]=255;dd[di+3]=255;
+      }
+    }
+  }
+  dstCtx.putImageData(dstImg,0,0);
+  return {canvas:dst,dstW:outW,dstH:outH};
+}
+
+// ─── Step 4: Grayscale Stretch (Scanner effect without harsh binary) ─────────
+function documentScan(srcCanvas,W,H){
+  const srcCtx=srcCanvas.getContext('2d',{willReadFrequently:true});
+  const imgData=srcCtx.getImageData(0,0,W,H);
+  const data=imgData.data;
+
+  // Convert to grayscale
+  for(let i=0;i<W*H;i++){
+    const g=Math.round(0.299*data[i*4]+0.587*data[i*4+1]+0.114*data[i*4+2]);
+    data[i*4]=data[i*4+1]=data[i*4+2]=g;
+  }
+  // Sample 90th percentile brightness
+  const sample=[];
+  const step=Math.max(1,Math.floor(W*H/2000));
+  for(let i=0;i<W*H;i+=step) sample.push(data[i*4]);
+  sample.sort((a,b)=>a-b);
+  const p90=sample[Math.floor(sample.length*0.90)]||220;
+  const scale=p90>10?255/p90:1;
+  // Stretch + S-curve
+  for(let i=0;i<W*H;i++){
+    let v=Math.min(255,Math.round(data[i*4]*scale));
+    v=Math.round(255*Math.pow(v/255,0.72));
+    data[i*4]=data[i*4+1]=data[i*4+2]=v;
+  }
+
+  const out=document.createElement('canvas');
+  out.width=W; out.height=H;
+  const outCtx=out.getContext('2d');
+  outCtx.putImageData(imgData,0,0);
+  return out;
+}
+
+// ─── Homography helpers ───────────────────────────────────────────────────────
+function computeHomography(p1,p2,p3,p4,q1,q2,q3,q4){
+  const pts=[[p1,q1],[p2,q2],[p3,q3],[p4,q4]];
+  const A=[],b=[];
+  for(const[p,q]of pts){
+    A.push([p.x,p.y,1,0,0,0,-q.x*p.x,-q.x*p.y]);b.push(q.x);
+    A.push([0,0,0,p.x,p.y,1,-q.y*p.x,-q.y*p.y]);b.push(q.y);
+  }
+  return [...gaussElim(A,b),1];
+}
+function gaussElim(A,b){
+  const n=8,M=A.map((r,i)=>[...r,b[i]]);
+  for(let c=0;c<n;c++){
+    let mx=c;
+    for(let r=c+1;r<n;r++)if(Math.abs(M[r][c])>Math.abs(M[mx][c]))mx=r;
+    [M[c],M[mx]]=[M[mx],M[c]];
+    if(Math.abs(M[c][c])<1e-12)continue;
+    const inv=1/M[c][c];
+    for(let r=0;r<n;r++){
+      if(r===c)continue;
+      const f=M[r][c]*inv;
+      for(let k=c;k<=n;k++)M[r][k]-=f*M[c][k];
+    }
+  }
+  return M.map((r,i)=>r[n]/r[i]);
+}
+function applyH(H,x,y){
+  const w=H[6]*x+H[7]*y+H[8];
+  return[(H[0]*x+H[1]*y+H[2])/w,(H[3]*x+H[4]*y+H[5])/w];
+}
+
+// ─── Preview + Send ───────────────────────────────────────────────────────────
+function retake(){
+  capturedBlob=null;
+  showScreen('home');
+  setTimeout(()=>document.getElementById('file-input').click(),200);
+}
+
+async function confirmAndSend(){
+  if(!capturedBlob){showError('No image ready');return;}
+  setProc(true,'Uploading to PC…','');
+  try{
+    const form=new FormData();
+    form.append('file',capturedBlob,'scan.jpg');
+    const resp=await fetch(`${BACKEND}/api/scan/${SCAN_CODE}/upload`,{method:'POST',body:form});
+    if(!resp.ok){
+      const j=await resp.json().catch(()=>({}));
+      throw new Error(j.detail||resp.statusText);
+    }
+    setProc(false);
+    showScreen('success');
+  }catch(err){
+    setProc(false);
+    showError('Upload failed: '+err.message);
+  }
+}
+</script>
+</body>
+</html>

@@ -3,9 +3,10 @@ import { useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { Card, Button } from "@heroui/react";
-import { ImagePlus, Lightbulb, ChevronRight, Check, X, Circle, Loader } from "lucide-react";
+import { ImagePlus, Lightbulb, ChevronRight, Check, X, Circle, Loader, Camera } from "lucide-react";
 import { evaluateOMR } from "@/lib/api";
 import type { ProcessingStep } from "@/types";
+import CameraScanModal from "@/components/CameraScanModal";
 
 const STEP_LABELS = [
   "Image loaded",
@@ -30,6 +31,7 @@ export default function EvaluatePage() {
   const [error, setError] = useState<string>("");
   const [warnings, setWarnings] = useState<string[]>([]);
   const [dragOver, setDragOver] = useState(false);
+  const [showScanModal, setShowScanModal] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   function handleFile(f: File) {
@@ -40,8 +42,18 @@ export default function EvaluatePage() {
     setPreview(url);
   }
 
-  async function handleProcess() {
-    if (!file) return;
+  function handleScanReady(f: File) {
+    setShowScanModal(false);
+    handleFile(f);
+    // Auto-trigger processing after a short delay so the preview renders
+    setTimeout(() => {
+      handleProcess(f);
+    }, 300);
+  }
+
+  async function handleProcess(overrideFile?: File) {
+    const target = overrideFile ?? file;
+    if (!target) return;
     setProcessing(true);
     setError("");
     setWarnings([]);
@@ -57,7 +69,7 @@ export default function EvaluatePage() {
     }, 400);
 
     try {
-      const result = await evaluateOMR(testId, file);
+      const result = await evaluateOMR(testId, target);
       clearInterval(interval);
       if (result.steps) {
         setSteps(result.steps);
@@ -80,6 +92,14 @@ export default function EvaluatePage() {
 
   return (
     <div className="p-8 max-w-2xl">
+      {/* Camera Scan Modal */}
+      {showScanModal && (
+        <CameraScanModal
+          testId={testId}
+          onImageReady={handleScanReady}
+          onClose={() => setShowScanModal(false)}
+        />
+      )}
       <div className="mb-6">
         <div className="flex items-center gap-2 text-xs text-default-400 mb-2">
           <Link href="/tests" className="hover:text-foreground">Tests</Link>
@@ -95,7 +115,19 @@ export default function EvaluatePage() {
       {/* Upload Area */}
       <Card variant="secondary" className="mb-5">
         <Card.Content className="p-6">
-          <h2 className="font-semibold text-foreground mb-4">Upload OMR Sheet</h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-semibold text-foreground">Upload OMR Sheet</h2>
+            <Button
+              variant="outline"
+              size="sm"
+              onPress={() => setShowScanModal(true)}
+              isDisabled={processing}
+              className="gap-1.5 text-primary border-primary-200 hover:bg-primary-50"
+            >
+              <Camera size={14} />
+              Scan by Cam
+            </Button>
+          </div>
 
           <div
             className={`border-2 border-dashed rounded-2xl bg-white p-10 text-center cursor-pointer transition-all ${
@@ -211,7 +243,7 @@ export default function EvaluatePage() {
       {/* Actions */}
       <div className="flex gap-3">
         <Button
-          onPress={handleProcess}
+          onPress={() => handleProcess()}
           isDisabled={!file || processing}
           variant="primary"
           className="flex-1"
