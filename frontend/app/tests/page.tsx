@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Card, Button, Chip } from "@heroui/react";
+import { Card, Button, Chip, Modal, ModalBackdrop, ModalContainer, ModalDialog, ModalHeader, ModalBody, ModalFooter, useOverlayState } from "@heroui/react";
 import { Plus, ClipboardList, CheckCircle, AlertTriangle, Trash2, ExternalLink, Play } from "lucide-react";
 import { fetchTests, deleteTest } from "@/lib/api";
 import type { Test } from "@/types";
@@ -10,6 +10,8 @@ export default function TestsPage() {
   const [tests, setTests] = useState<Test[]>([]);
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [testToDelete, setTestToDelete] = useState<{id: number, name: string} | null>(null);
+  const state = useOverlayState();
 
   async function load() {
     setLoading(true);
@@ -18,16 +20,23 @@ export default function TestsPage() {
 
   useEffect(() => { load(); }, []);
 
-  async function handleDelete(id: number, name: string) {
-    if (!confirm(`Delete test "${name}" and all its evaluations? This cannot be undone.`)) return;
-    setDeletingId(id);
+  function confirmDelete(id: number, name: string) {
+    setTestToDelete({ id, name });
+    state.open();
+  }
+
+  async function handleDelete() {
+    if (!testToDelete) return;
+    setDeletingId(testToDelete.id);
     try {
-      await deleteTest(id);
-      setTests(p => p.filter(t => t.id !== id));
+      await deleteTest(testToDelete.id);
+      setTests(p => p.filter(t => t.id !== testToDelete.id));
+      state.close();
     } catch (e: any) {
       alert("Delete failed: " + e.message);
     } finally {
       setDeletingId(null);
+      setTestToDelete(null);
     }
   }
 
@@ -81,7 +90,7 @@ export default function TestsPage() {
                 </div>
                 <div className="flex items-center gap-2">
                   <Link href={`/tests/${test.id}`}>
-                    <Button size="sm" variant="outline">Open</Button>
+                    <Button size="sm" variant="secondary">Open</Button>
                   </Link>
                   {test.answer_key_count > 0 && (
                     <Link href={`/tests/${test.id}/evaluate`}>
@@ -91,8 +100,7 @@ export default function TestsPage() {
                   <Button
                     size="sm"
                     variant="danger"
-                    isPending={deletingId === test.id}
-                    onPress={() => handleDelete(test.id, test.name)}
+                    onPress={() => confirmDelete(test.id, test.name)}
                   >
                     Delete
                   </Button>
@@ -102,6 +110,34 @@ export default function TestsPage() {
           ))}
         </div>
       )}
+
+      <Modal>
+        <ModalBackdrop isOpen={state.isOpen} onOpenChange={state.setOpen}>
+          <ModalContainer>
+          <ModalDialog>
+            {({ close }) => (
+              <>
+                <ModalHeader className="flex flex-col gap-1">Confirm Deletion</ModalHeader>
+                <ModalBody>
+                  <p>
+                    Are you sure you want to delete the test <strong>{testToDelete?.name}</strong> and all its evaluations?
+                  </p>
+                  <p className="text-danger">This action cannot be undone.</p>
+                </ModalBody>
+                <ModalFooter>
+                  <Button variant="tertiary" onPress={close}>
+                    Cancel
+                  </Button>
+                  <Button variant="danger" isPending={deletingId === testToDelete?.id} onPress={handleDelete}>
+                    Delete Test
+                  </Button>
+                </ModalFooter>
+              </>
+            )}
+          </ModalDialog>
+        </ModalContainer>
+        </ModalBackdrop>
+      </Modal>
     </div>
   );
 }

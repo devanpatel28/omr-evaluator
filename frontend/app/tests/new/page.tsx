@@ -11,7 +11,7 @@ export default function NewTestPage() {
   const fileRef = useRef<HTMLInputElement>(null);
 
   const [name, setName] = useState("");
-  const [totalQuestions, setTotalQuestions] = useState(200);
+  const [totalQuestions, setTotalQuestions] = useState(100);
   const [correctMarks, setCorrectMarks] = useState(1.0);
   const [wrongMarks, setWrongMarks] = useState(-1.25);
   const [eMarks, setEMarks] = useState(-1.0);

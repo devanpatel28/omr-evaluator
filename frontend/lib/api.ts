@@ -13,6 +13,10 @@ async function apiFetch(path: string, options: RequestInit = {}) {
     throw new Error(typeof message === "string" ? message : JSON.stringify(message));
   }
 
+  if (res.status === 204) {
+    return null;
+  }
+
   const contentType = res.headers.get("content-type") || "";
   if (contentType.includes("application/json")) {
     return res.json();

@@ -118,7 +118,14 @@ export default function EvaluatePage() {
 
             {preview && !processing ? (
               <div className="flex flex-col items-center gap-3">
-                <img src={preview} alt="OMR preview" className="max-h-48 rounded-lg border border-default-200 object-contain" />
+                {file?.type === "application/pdf" || file?.name.toLowerCase().endsWith(".pdf") ? (
+                  <div className="h-48 aspect-[3/4] bg-default-100 rounded-lg border border-default-200 flex flex-col items-center justify-center gap-2">
+                    <ImagePlus size={32} className="text-default-400" />
+                    <span className="text-default-500 font-medium text-sm">PDF Document</span>
+                  </div>
+                ) : (
+                  <img src={preview} alt="OMR preview" className="max-h-48 rounded-lg border border-default-200 object-contain" />
+                )}
                 <p className="text-default-700 text-sm font-medium">{file?.name}</p>
                 <p className="text-default-400 text-xs">{file ? (file.size / 1024).toFixed(0) : 0} KB — Click to change</p>
               </div>

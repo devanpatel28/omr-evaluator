@@ -7,8 +7,26 @@ import numpy as np
 from typing import Tuple
 
 
+import fitz  # PyMuPDF
+
 def load_image(image_path: str) -> np.ndarray:
-    """Load image from file path."""
+    """Load image from file path. Supports image formats and single-page PDFs."""
+    if image_path.lower().endswith(".pdf"):
+        doc = fitz.open(image_path)
+        if len(doc) == 0:
+            raise ValueError(f"PDF is empty: {image_path}")
+        page = doc[0]
+        # Render at 200 DPI for good resolution
+        pix = page.get_pixmap(dpi=200)
+        img = np.frombuffer(pix.samples, dtype=np.uint8).reshape(pix.h, pix.w, pix.n)
+        if pix.n == 4:  # RGBA
+            img = cv2.cvtColor(img, cv2.COLOR_RGBA2BGR)
+        elif pix.n == 3:  # RGB
+            img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+        elif pix.n == 1:  # Grayscale
+            img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
+        return img
+
     img = cv2.imread(image_path)
     if img is None:
         raise ValueError(f"Could not load image from: {image_path}")
